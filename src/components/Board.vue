@@ -3,13 +3,21 @@
     <h1>{{ title }}</h1>
     <div class="row" v-for="(row, i) in board" :key="i">
       <div class="col" v-for="(col, j) in row" :key="j">
-        {{ col }}
+        <Cell
+          :value="col.value"
+          :active="col.active"
+          :row="i"
+          :col="j"
+          v-on:cell-clicked="handleClick"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import Cell from "@/components/Cell.vue";
+
 export default {
   name: "Board",
   data: () => {
@@ -20,33 +28,57 @@ export default {
   },
 
   mounted() {
-    this.generateBoard(9, 9, 15);
+    this.generateBoard(6, 6, 5);
   },
 
   methods: {
     randomNum: max => {
+      // return a random number between 0 and max inclusively
       return Math.floor(Math.random() * Math.floor(max));
     },
 
     generateBoard(rows, cols, mines) {
-      // Initialize board to empty
+      const getAvailableCells = () => {
+        const availableCells = [];
+        for (let i = 0; i < rows; i++) {
+          for (let j = 0; j < cols; j++) {
+            if (this.board[i][j].value === "_") {
+              availableCells.push([i, j]);
+            }
+          }
+        }
+        return availableCells;
+      };
+
+      // Initialize board to entirely empty but active cells
       for (let r = 0; r < rows; r++) {
-        this.board.push(new Array(cols).fill("_"));
+        this.$set(this.board, r, []);
+        for (let c = 0; c < cols; c++) {
+          this.$set(this.board[r], c, {
+            value: "_",
+            active: true
+          });
+        }
       }
 
       // Place mines
-      do {
-        const row = this.randomNum(rows);
-        const col = this.randomNum(cols);
+      for (let m = 0; m < mines; m++) {
+        const availableCells = getAvailableCells();
+        const randomNum = this.randomNum(availableCells.length);
+        const cell = availableCells[randomNum];
+        const row = cell[0];
+        const col = cell[1];
+        this.$set(this.board[row][col], "value", "x");
+      }
+    },
 
-        if (this.board[row][col] === "x") {
-          continue;
-        } else {
-          this.board[row][col] = "x";
-          mines = mines - 1;
-        }
-      } while (mines > 0);
+    handleClick(row, col) {
+      this.$set(this.board[row][col], "active", false);
     }
+  },
+
+  components: {
+    Cell
   }
 };
 </script>
