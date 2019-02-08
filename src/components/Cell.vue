@@ -2,7 +2,9 @@
   <div
     :class="{ 'cell-container': true, active: active }"
     @click="emitCellClicked"
-  ></div>
+  >
+    <span v-if="value === 'x'">{{ value }}</span>
+  </div>
 </template>
 
 <script>
@@ -45,7 +47,17 @@ export default {
   cursor: pointer;
 }
 
+span {
+  font-size: 17px;
+  font-weight: 400;
+}
+
 .cell-container.active {
   border: 1px solid #ccc;
+}
+
+.mine {
+  color: red;
+  font-weight: bold;
 }
 </style>

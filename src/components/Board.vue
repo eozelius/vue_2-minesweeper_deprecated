@@ -1,15 +1,39 @@
 <template>
   <div class="board-container">
     <h1>{{ title }}</h1>
-    <div class="row" v-for="(row, i) in board" :key="i">
-      <div class="col" v-for="(col, j) in row" :key="j">
-        <Cell
-          :value="col.value"
-          :active="col.active"
-          :row="i"
-          :col="j"
-          v-on:cell-clicked="handleClick"
-        />
+    <div class="details-container">
+      <div class="mines-remaining">
+        <h3>Mines Remaining: {{ mines }}</h3>
+      </div>
+
+      <div class="reset-container">
+        <!-- Rows -->
+        <label for="rows">Rows</label>
+        <input v-model="rows" name="cols" type="text" />
+
+        <!-- Columns -->
+        <label for="cols">Columns</label>
+        <input v-model="cols" name="rows" type="text" />
+
+        <!-- Mines -->
+        <label for="mines">Mines</label>
+        <input v-model="mines" name="mines" type="text" />
+
+        <button @click="resetGame">Reset</button>
+      </div>
+    </div>
+
+    <div class="gameplay-container">
+      <div class="row" v-for="(row, i) in board" :key="i">
+        <div class="col" v-for="(col, j) in row" :key="j">
+          <Cell
+            :value="col.value"
+            :active="col.active"
+            :row="i"
+            :col="j"
+            v-on:cell-clicked="handleClick"
+          />
+        </div>
       </div>
     </div>
   </div>
@@ -23,12 +47,15 @@ export default {
   data: () => {
     return {
       title: "Minesweeper",
-      board: []
+      board: [],
+      rows: 5,
+      cols: 5,
+      mines: 5
     };
   },
 
   mounted() {
-    this.generateBoard(6, 6, 5);
+    this.generateBoard(this.rows, this.cols, this.mines);
   },
 
   methods: {
@@ -37,7 +64,7 @@ export default {
       return Math.floor(Math.random() * Math.floor(max));
     },
 
-    generateBoard(rows, cols, mines) {
+    generateBoard(rows = this.rows, cols = this.cols, mines = this.mines) {
       const getAvailableCells = () => {
         const availableCells = [];
         for (let i = 0; i < rows; i++) {
@@ -74,6 +101,11 @@ export default {
 
     handleClick(row, col) {
       this.$set(this.board[row][col], "active", false);
+    },
+
+    resetGame() {
+      this.board = [];
+      this.generateBoard(this.rows, this.col, this.mines);
     }
   },
 
@@ -85,10 +117,22 @@ export default {
 
 <style lang="scss" scoped>
 .board-container {
-  width: 50%;
+  width: 75%;
   border: 1px solid #ccc;
   margin: 3% auto 5%;
   padding: 1% 2% 5%;
+}
+
+.details-container {
+  width: 24%;
+  display: inline-block;
+  vertical-align: top;
+}
+
+.gameplay-container {
+  width: 74%;
+  display: inline-block;
+  vertical-align: top;
 }
 
 .row {
@@ -97,5 +141,34 @@ export default {
 
 .col {
   flex-grow: 1;
+}
+
+.reset-container {
+  padding: 0 0 5%;
+
+  label {
+    display: block;
+    font-size: 18px;
+  }
+
+  input[type="text"] {
+    width: 50%;
+    height: 25px;
+    margin: 1% auto 5%;
+    display: block;
+    padding: 1% 2%;
+    font-size: 15px;
+  }
+
+  button {
+    margin: 10% auto 5%;
+    width: 150px;
+    height: 30px;
+    background-color: aliceblue;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 15px;
+    line-height: 15px;
+  }
 }
 </style>
