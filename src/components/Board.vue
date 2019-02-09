@@ -1,12 +1,17 @@
 <template>
   <div class="board-container">
-    <h1>{{ title }}</h1>
     <div class="details-container">
       <div class="mines-remaining">
         <h3>Mines Remaining: {{ mines }}</h3>
       </div>
 
       <div class="reset-container">
+        <div class="errors-container">
+          <ul class="errors">
+            <li v-for="(error, i) in errors" :key="i">{{ error }}</li>
+          </ul>
+        </div>
+
         <!-- Rows -->
         <label for="rows">Rows</label>
         <input v-model="rows" name="cols" type="text" />
@@ -24,6 +29,7 @@
     </div>
 
     <div class="gameplay-container">
+      <h1>{{ title }}</h1>
       <div class="row" v-for="(row, i) in board" :key="i">
         <div class="col" v-for="(col, j) in row" :key="j">
           <Cell
@@ -48,9 +54,11 @@ export default {
     return {
       title: "Minesweeper",
       board: [],
-      rows: 5,
-      cols: 5,
-      mines: 5
+      rows: 3,
+      cols: 3,
+      mines: 5,
+      safeCells: 20,
+      errors: []
     };
   },
 
@@ -65,6 +73,12 @@ export default {
     },
 
     generateBoard(rows = this.rows, cols = this.cols, mines = this.mines) {
+      if (!this.validGame()) {
+        return;
+      }
+
+      this.safeCells = rows * cols - mines;
+
       const getAvailableCells = () => {
         const availableCells = [];
         for (let i = 0; i < rows; i++) {
@@ -100,12 +114,52 @@ export default {
     },
 
     handleClick(row, col) {
-      this.$set(this.board[row][col], "active", false);
+      // this cell has already been clicked
+      if (this.board[row][col].active === false) {
+        return false;
+      } else {
+        this.$set(this.board[row][col], "active", false);
+      }
+
+      // Triggered a mine
+      if (this.board[row][col].value === "x") {
+        alert("you lose!!");
+        this.resetGame();
+      } else {
+        this.safeCells--;
+      }
+
+      // Game won?
+      if (this.safeCells === 0) {
+        alert("you will!!");
+        this.resetGame();
+      }
     },
 
     resetGame() {
+      if (!this.validGame()) {
+        return;
+      }
       this.board = [];
       this.generateBoard(this.rows, this.col, this.mines);
+    },
+
+    validGame() {
+      this.errors = [];
+
+      if (this.mines >= this.rows * this.cols) {
+        this.errors.push("Error: Mines cannot outnumber Cells.");
+      }
+
+      if (this.rows <= 0) {
+        this.errors.push("Error: Rows must be greater than zero.");
+      }
+
+      if (this.cols <= 0) {
+        this.errors.push("Error: Columns must be greater than zero.");
+      }
+
+      return this.errors.length === 0 ? true : false;
     }
   },
 
@@ -169,6 +223,19 @@ export default {
     cursor: pointer;
     font-size: 15px;
     line-height: 15px;
+  }
+
+  .errors-container {
+    ul {
+      list-style-type: none;
+    }
+
+    li {
+      text-align: left;
+      color: maroon;
+      font-weight: 400;
+      margin-bottom: 10px;
+    }
   }
 }
 </style>
