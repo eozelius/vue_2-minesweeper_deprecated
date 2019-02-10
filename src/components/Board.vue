@@ -3,6 +3,7 @@
     <div class="details-container">
       <div class="mines-remaining">
         <h3>Mines Remaining: {{ mines }}</h3>
+        <h3>Safe Cells: {{ safeCells }}</h3>
       </div>
 
       <div class="reset-container">
@@ -22,7 +23,7 @@
 
         <!-- Mines -->
         <label for="mines">Mines</label>
-        <input v-model="mines" name="mines" type="text" />
+        <input v-model="newMines" name="mines" type="text" />
 
         <button @click="resetGame">Reset</button>
       </div>
@@ -33,10 +34,12 @@
       <div class="row" v-for="(row, i) in board" :key="i">
         <div class="col" v-for="(col, j) in row" :key="j">
           <Cell
-            :value="col.value"
+            :mine="col.mine"
+            :flag="col.flag"
             :active="col.active"
             :row="i"
             :col="j"
+            :border-mines="col.borderMines"
             v-on:cell-clicked="handleClick"
           />
         </div>
@@ -49,15 +52,16 @@
 import Cell from "@/components/Cell.vue";
 
 export default {
-  name: "Board",
+  name: "Minesweeper-Board",
   data: () => {
     return {
       title: "Minesweeper",
       board: [],
-      rows: 3,
-      cols: 3,
+      rows: 4,
+      cols: 4,
+      newMines: 5,
       mines: 5,
-      safeCells: 20,
+      safeCells: 2,
       errors: []
     };
   },
@@ -73,17 +77,20 @@ export default {
     },
 
     generateBoard(rows = this.rows, cols = this.cols, mines = this.mines) {
-      if (!this.validGame()) {
+      if (!this.validGame(rows, cols, mines)) {
         return;
       }
 
+      // calculate number of cells that are not mines.
       this.safeCells = rows * cols - mines;
+      this.mines = mines;
 
+      // Helper function to return a list of cells that do not have a mine place in them.
       const getAvailableCells = () => {
         const availableCells = [];
         for (let i = 0; i < rows; i++) {
           for (let j = 0; j < cols; j++) {
-            if (this.board[i][j].value === "_") {
+            if (!this.board[i][j].mine) {
               availableCells.push([i, j]);
             }
           }
@@ -96,8 +103,10 @@ export default {
         this.$set(this.board, r, []);
         for (let c = 0; c < cols; c++) {
           this.$set(this.board[r], c, {
-            value: "_",
-            active: true
+            mine: false,
+            active: true,
+            borderMines: 0,
+            flag: false
           });
         }
       }
@@ -109,57 +118,165 @@ export default {
         const cell = availableCells[randomNum];
         const row = cell[0];
         const col = cell[1];
-        this.$set(this.board[row][col], "value", "x");
+        this.$set(this.board[row][col], "mine", true);
+      }
+
+      // Determine Border Mines
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
+          if (!this.board[i][j].mine) {
+            continue;
+          }
+
+          // North
+          if (i - 1 >= 0) {
+            const neighbor = this.board[i - 1][j];
+            const mines = neighbor.borderMines + 1;
+            this.$set(neighbor, "borderMines", mines);
+          }
+
+          // NorthEast
+          if (i - 1 >= 0 && j + 1 < cols) {
+            const neighbor = this.board[i - 1][j + 1];
+            const mines = neighbor.borderMines + 1;
+            this.$set(neighbor, "borderMines", mines);
+          }
+
+          // East
+          if (j + 1 < cols) {
+            const neighbor = this.board[i][j + 1];
+            const mines = neighbor.borderMines + 1;
+            this.$set(neighbor, "borderMines", mines);
+          }
+
+          // SouthEast
+          if (i + 1 < rows && j + 1 < cols) {
+            const neighbor = this.board[i + 1][j + 1];
+            const mines = neighbor.borderMines + 1;
+            this.$set(neighbor, "borderMines", mines);
+          }
+
+          // South
+          if (i + 1 < rows) {
+            const neighbor = this.board[i + 1][j];
+            const mines = neighbor.borderMines + 1;
+            this.$set(neighbor, "borderMines", mines);
+          }
+
+          // SouthWest
+          if (i + 1 < rows && j - 1 >= 0) {
+            const neighbor = this.board[i + 1][j - 1];
+            const mines = neighbor.borderMines + 1;
+            this.$set(neighbor, "borderMines", mines);
+          }
+
+          // West
+          if (j - 1 >= 0) {
+            const neighbor = this.board[i][j - 1];
+            const mines = neighbor.borderMines + 1;
+            this.$set(neighbor, "borderMines", mines);
+          }
+
+          // NorthWest
+          if (i - 1 >= 0 && j - 1 >= 0) {
+            const neighbor = this.board[i - 1][j - 1];
+            const mines = neighbor.borderMines + 1;
+            this.$set(neighbor, "borderMines", mines);
+          }
+        }
       }
     },
 
-    handleClick(row, col) {
-      // this cell has already been clicked
-      if (this.board[row][col].active === false) {
-        return false;
-      } else {
-        this.$set(this.board[row][col], "active", false);
+    handleFlagClick(row, col) {
+      // Removing Flag
+      if (this.board[row][col].flag) {
+        this.$set(this.board[row][col], "flag", false);
+        this.$set(this.board[row][col], "active", true);
+        this.mines++;
+        return;
       }
+
+      // Replace a number with a flag
+      if (!this.board[row][col].active) {
+        this.$set(this.board[row][col], "flag", true);
+        this.mines--;
+        this.safeCells++;
+        return;
+      }
+
+      this.$set(this.board[row][col], "flag", true);
+      this.$set(this.board[row][col], "active", false);
+      this.mines--;
+      this.gameWon();
+    },
+
+    handleClick(row, col, flag) {
+      if (flag) {
+        this.handleFlagClick(row, col);
+        return;
+      }
+
+      // this cell has already been clicked
+      if (!this.board[row][col].active) {
+        return false;
+      }
+
+      // Set Cell to Inactive
+      this.$set(this.board[row][col], "active", false);
+      this.safeCells--;
 
       // Triggered a mine
-      if (this.board[row][col].value === "x") {
+      if (this.board[row][col].mine) {
         alert("you lose!!");
         this.resetGame();
-      } else {
-        this.safeCells--;
+        return;
       }
 
-      // Game won?
-      if (this.safeCells === 0) {
-        alert("you will!!");
-        this.resetGame();
-      }
+      this.gameWon();
     },
 
     resetGame() {
-      if (!this.validGame()) {
+      if (!this.validGame(this.rows, this.cols, this.newMines)) {
         return;
       }
       this.board = [];
-      this.generateBoard(this.rows, this.col, this.mines);
+      this.generateBoard(this.rows, this.cols, this.newMines);
     },
 
-    validGame() {
+    validGame(rows, cols, mines) {
       this.errors = [];
 
-      if (this.mines >= this.rows * this.cols) {
+      if (mines >= rows * cols) {
         this.errors.push("Error: Mines cannot outnumber Cells.");
       }
 
-      if (this.rows <= 0) {
+      if (rows <= 0) {
         this.errors.push("Error: Rows must be greater than zero.");
       }
 
-      if (this.cols <= 0) {
+      if (cols <= 0) {
         this.errors.push("Error: Columns must be greater than zero.");
       }
 
       return this.errors.length === 0 ? true : false;
+    },
+
+    gameWon() {
+      if (this.safeCells === 0 && this.allMinesFlagged()) {
+        setTimeout(() => alert("you win"));
+      }
+    },
+
+    allMinesFlagged() {
+      for (let r = 0; r < this.rows; r++) {
+        for (let c = 0; c < this.cols; c++) {
+          if (this.board[r][c].mine && !this.board[r][c].flag) {
+            return false;
+          }
+        }
+      }
+
+      return true;
     }
   },
 
@@ -191,10 +308,7 @@ export default {
 
 .row {
   display: flex;
-}
-
-.col {
-  flex-grow: 1;
+  justify-content: center;
 }
 
 .reset-container {

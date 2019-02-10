@@ -1,20 +1,21 @@
 <template>
   <div
-    :class="{ 'cell-container': true, active: active }"
+    :class="{ 'cell-container': true, active: active, flag: flag }"
     @click="emitCellClicked"
   >
-    <span v-if="value === 'x'">{{ value }}</span>
+    <!-- <p v-if="mine" class="mine">X</p> -->
+    <p v-if="!active && !flag">{{ borderMines }}</p>
   </div>
 </template>
 
 <script>
 export default {
-  name: "minesweeper-cell",
+  name: "minesweeper-Cell",
 
   props: {
-    value: {
-      type: String,
-      default: "_"
+    mine: {
+      type: Boolean,
+      default: false
     },
     active: {
       type: Boolean,
@@ -27,12 +28,21 @@ export default {
     col: {
       type: Number,
       default: 0
+    },
+    borderMines: {
+      type: Number,
+      default: 0
+    },
+    flag: {
+      type: Boolean,
+      default: false
     }
   },
 
   methods: {
-    emitCellClicked() {
-      this.$emit("cell-clicked", this.row, this.col);
+    emitCellClicked(e) {
+      const flag = e.altKey ? true : false;
+      this.$emit("cell-clicked", this.row, this.col, flag);
     }
   }
 };
@@ -40,16 +50,19 @@ export default {
 
 <style lang="scss" scoped>
 .cell-container {
-  width: 95%;
-  margin: 5px auto;
+  width: 55px;
   height: 50px;
-  border: 1px solid red;
+  border: 1px solid #ccc;
+  background: #8f8f8f;
+  font-weight: bold;
   cursor: pointer;
 }
 
-span {
-  font-size: 17px;
-  font-weight: 400;
+p {
+  font-size: 20px;
+  color: #fff;
+  line-height: 50px;
+  margin: 0;
 }
 
 .cell-container.active {
@@ -59,5 +72,13 @@ span {
 .mine {
   color: red;
   font-weight: bold;
+  margin: 0 5px;
+}
+
+.flag {
+  background-image: url("../assets/flag-icon.png");
+  background-repeat: no-repeat;
+  background-size: 35px 35px;
+  background-position: center;
 }
 </style>
