@@ -15,22 +15,22 @@
 
         <!-- Rows -->
         <label for="rows">Rows</label>
-        <input v-model="rows" name="cols" type="text" />
+        <input v-model="resetRows" name="reset-rows" type="text" />
 
         <!-- Columns -->
         <label for="cols">Columns</label>
-        <input v-model="cols" name="rows" type="text" />
+        <input v-model="resetCols" name="reset-cols" type="text" />
 
         <!-- Mines -->
         <label for="mines">Mines</label>
-        <input v-model="newMines" name="mines" type="text" />
+        <input v-model="resetMines" name="reset-mines" type="text" />
 
         <button @click="resetGame">Reset</button>
       </div>
     </div>
 
     <div class="gameplay-container">
-      <h1>{{ title }}</h1>
+      <h1>Minesweeper</h1>
       <div class="row" v-for="(row, i) in board" :key="i">
         <div class="col" v-for="(col, j) in row" :key="j">
           <Cell
@@ -55,12 +55,13 @@ export default {
   name: "Minesweeper-Board",
   data: () => {
     return {
-      title: "Minesweeper",
       board: [],
       rows: 4,
       cols: 4,
-      newMines: 5,
       mines: 5,
+      resetRows: 4,
+      resetCols: 4,
+      resetMines: 5,
       safeCells: 2,
       errors: []
     };
@@ -68,6 +69,26 @@ export default {
 
   mounted() {
     this.generateBoard(this.rows, this.cols, this.mines);
+  },
+
+  watch: {
+    resetRows: function(newRows) {
+      if (this.validGame(newRows, this.resetCols, this.resetMines)) {
+        this.resetRows = parseInt(newRows);
+      }
+    },
+
+    resetCols: function(newCols) {
+      if (this.validGame(this.resetRows, newCols, this.resetMines)) {
+        this.resetCols = parseInt(newCols);
+      }
+    },
+
+    resetMines: function(newMines) {
+      if (this.validGame(this.resetRows, this.resetCols, newMines)) {
+        this.resetMines = parseInt(newMines);
+      }
+    }
   },
 
   methods: {
@@ -80,6 +101,10 @@ export default {
       if (!this.validGame(rows, cols, mines)) {
         return;
       }
+
+      this.rows = rows;
+      this.cols = cols;
+      this.mines = mines;
 
       // calculate number of cells that are not mines.
       this.safeCells = rows * cols - mines;
@@ -236,26 +261,42 @@ export default {
     },
 
     resetGame() {
-      if (!this.validGame(this.rows, this.cols, this.newMines)) {
+      if (!this.validGame(this.resetRows, this.resetCols, this.resetMines)) {
         return;
       }
       this.board = [];
-      this.generateBoard(this.rows, this.cols, this.newMines);
+      this.generateBoard(this.resetRows, this.resetCols, this.resetMines);
     },
 
     validGame(rows, cols, mines) {
       this.errors = [];
 
+      if (isNaN(rows)) {
+        this.errors.push("Rows is not a number.");
+      }
+
+      if (isNaN(cols)) {
+        this.errors.push("Columns is not a number.");
+      }
+
+      if (isNaN(mines)) {
+        this.errors.push("Mines is not a number.");
+      }
+
       if (mines >= rows * cols) {
-        this.errors.push("Error: Mines cannot outnumber Cells.");
+        this.errors.push("Mines cannot outnumber Cells.");
+      }
+
+      if (mines <= 0) {
+        this.errors.push("Mines must be greater than zero.");
       }
 
       if (rows <= 0) {
-        this.errors.push("Error: Rows must be greater than zero.");
+        this.errors.push("Rows must be greater than zero.");
       }
 
       if (cols <= 0) {
-        this.errors.push("Error: Columns must be greater than zero.");
+        this.errors.push("Columns must be greater than zero.");
       }
 
       return this.errors.length === 0 ? true : false;
@@ -275,7 +316,6 @@ export default {
           }
         }
       }
-
       return true;
     }
   },
