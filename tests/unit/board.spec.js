@@ -8,6 +8,27 @@ describe("Board", () => {
     wrapper = shallowMount(Board);
   });
 
+  // Helper Methods
+  const flagAllMines = (wrapper = wrapper) => {
+    for (let r = 0; r < wrapper.vm.rows; r++) {
+      for (let c = 0; c < wrapper.vm.cols; c++) {
+        if (wrapper.vm.board[r][c].mine) {
+          wrapper.vm.board[r][c].flag = true;
+        }
+      }
+    }
+  };
+
+  const findMine = wrapper => {
+    for (let r = 0; r < wrapper.vm.rows; r++) {
+      for (let c = 0; c < wrapper.vm.cols; c++) {
+        if (wrapper.vm.board[r][c].mine) {
+          return [r, c];
+        }
+      }
+    }
+  };
+
   it("defaults to 4x4 and 5 mines", () => {
     // Testing rendered output.  Treat Board like a blackbox.
     expect(wrapper.findAll(".row").length).toEqual(4);
@@ -19,9 +40,19 @@ describe("Board", () => {
     expect(wrapper.vm.mines).toEqual(5);
   });
 
-  it("Rejects invalid number of rows", () => {
+  it("rejects generateBoard if board is invalid.", () => {
+    expect(wrapper.vm.generateBoard(0, 0, -1)).toEqual(false);
+  });
+
+  it("Rejects 0 rows", () => {
     const resetRowsInput = wrapper.find("input[name='reset-rows']");
     resetRowsInput.setValue(`0`);
+    expect(wrapper.vm.errors.length >= 1).toEqual(true);
+  });
+
+  it("Rejects isNaN rows", () => {
+    const resetRowsInput = wrapper.find("input[name='reset-rows']");
+    resetRowsInput.setValue("asdf");
     expect(wrapper.vm.errors.length >= 1).toEqual(true);
   });
 
@@ -57,5 +88,42 @@ describe("Board", () => {
 
     expect(wrapper.findAll(".row").length).toEqual(3);
     expect(wrapper.findAll(".col").length).toEqual(9);
+  });
+
+  it("will not reset if errors are present", () => {
+    expect(wrapper.findAll(".row").length).toEqual(4);
+    wrapper.find("input[name='reset-rows']").setValue("0");
+    wrapper.find(".reset-container button").trigger("click");
+    expect(wrapper.findAll(".row").length).toEqual(4);
+  });
+
+  // Endgame Scenarios
+  it("[Lose] click a mine", () => {
+    flagAllMines(wrapper);
+    const mine = findMine(wrapper);
+    const row = mine[0];
+    const col = mine[1];
+    wrapper.vm.board[row][col].flag = false;
+    expect(wrapper.vm.gameWon()).toEqual(false);
+  });
+
+  it("[Continue] All mines flagged, but one cell has not been clicked", () => {
+    wrapper.vm.safeCells = 1;
+    flagAllMines(wrapper);
+    expect(wrapper.vm.gameWon()).toEqual(false);
+  });
+
+  it("[Continue] All cells clicked, but one mine has not been flagged", () => {
+    wrapper.vm.safeCells = 0;
+    flagAllMines(wrapper);
+    wrapper.vm.board[0][0].mine = true;
+    wrapper.vm.board[0][0].flag = false;
+    expect(wrapper.vm.gameWon()).toEqual(false);
+  });
+
+  it("[Winning] All mines have been flagged and other cells clicked", () => {
+    wrapper.vm.safeCells = 0;
+    flagAllMines(wrapper);
+    expect(wrapper.vm.gameWon()).toEqual(true);
   });
 });

@@ -99,7 +99,7 @@ export default {
 
     generateBoard(rows = this.rows, cols = this.cols, mines = this.mines) {
       if (!this.validGame(rows, cols, mines)) {
-        return;
+        return false;
       }
 
       this.rows = rows;
@@ -305,6 +305,9 @@ export default {
     gameWon() {
       if (this.safeCells === 0 && this.allMinesFlagged()) {
         setTimeout(() => alert("you win"));
+        return true;
+      } else {
+        return false;
       }
     },
 
