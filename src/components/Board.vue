@@ -1,6 +1,7 @@
 <template>
   <div class="board-container">
-    <div class="details-container">
+    <!-- Left aside -->
+    <aside class="details-container">
       <div class="mines-remaining">
         <h3>Mines Remaining: {{ mines }}</h3>
         <h3>Safe Cells: {{ safeCells }}</h3>
@@ -27,9 +28,10 @@
 
         <button @click="resetGame">Reset</button>
       </div>
-    </div>
+    </aside>
 
-    <div class="gameplay-container">
+    <!-- Board -->
+    <main class="gameplay-container">
       <h1>Minesweeper</h1>
       <img
         class="stopwatch"
@@ -51,6 +53,45 @@
           />
         </div>
       </div>
+    </main>
+
+    <!-- High Scores -->
+    <aside class="high-scores-container">
+      <h1>High Scores</h1>
+      <table v-if="highScores.length > 0">
+        <tr>
+          <th>Rank</th>
+          <th>Name</th>
+          <th>Time</th>
+        </tr>
+
+        <tr
+          class="high-score"
+          v-for="(score, index) in highScores"
+          :key="score.id"
+        >
+          <td>{{ index + 1 }}.</td>
+          <td>{{ score.name }}</td>
+          <td>{{ score.time }}</td>
+        </tr>
+      </table>
+    </aside>
+
+    <!-- High Score Modal -->
+    <div v-if="showModal" class="high-score-modal-container">
+      <div class="high-score-modal">
+        <div>
+          <h1>Winner!</h1>
+          <h3>Add your name to the High Scores List!</h3>
+          <input v-model="newHighScoreName" type="text" name="high-score" />
+
+          <div class="btns-container">
+            <button @click="this.dismissModal" class="canel">Canel</button>
+            <button @click="this.handleHighScoreSave">Save</button>
+          </div>
+        </div>
+      </div>
+      <div class="overlay"></div>
     </div>
   </div>
 </template>
@@ -75,7 +116,10 @@ export default {
       elapsedTime: 0,
       timerInterval: null,
       gameActive: false,
-      errors: []
+      errors: [],
+      highScores: [],
+      showModal: false,
+      newHighScoreName: ""
     };
   },
 
@@ -349,9 +393,9 @@ export default {
 
     gameWon() {
       if (this.safeCells === 0 && this.allMinesFlagged()) {
-        setTimeout(() => alert("you win"));
         this.gameActive = false;
         this.pauseTimer();
+        this.revealModal();
         return true;
       } else {
         return false;
@@ -386,6 +430,28 @@ export default {
           this.$set(this.board[r][c], "reveal", true);
         }
       }
+    },
+
+    submitHighScore(name, time) {
+      this.highScores = this.highScores
+        .concat({
+          name,
+          time
+        })
+        .sort((a, b) => a.time - b.time);
+    },
+
+    revealModal() {
+      this.showModal = true;
+    },
+
+    dismissModal() {
+      this.showModal = false;
+    },
+
+    handleHighScoreSave() {
+      this.submitHighScore(this.newHighScoreName, this.elapsedTime);
+      this.dismissModal();
     }
   },
 
@@ -424,20 +490,6 @@ export default {
   padding: 5% 0 10%;
   border: 1px solid #ccc;
 
-  label {
-    display: block;
-    font-size: 18px;
-  }
-
-  input[type="text"] {
-    width: 50%;
-    height: 25px;
-    margin: 1% auto 5%;
-    display: block;
-    padding: 1% 2%;
-    font-size: 15px;
-  }
-
   .errors-container {
     ul {
       list-style-type: none;
@@ -466,6 +518,44 @@ export default {
   line-height: 55px;
 }
 
+.high-scores-container {
+  width: 90%;
+  min-height: 200px;
+  margin: 5% auto 5%;
+}
+
+.high-score-modal-container {
+  .high-score-modal {
+    position: fixed;
+    top: 15%;
+    left: 25%;
+    right: 25%;
+    height: 400px;
+    background-color: #fff;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    z-index: 1;
+    opacity: 1;
+  }
+
+  .btns-container {
+    width: 50%;
+    display: flex;
+    margin: 15% auto;
+  }
+
+  .overlay {
+    position: fixed;
+    top: -1%;
+    left: -1%;
+    right: -1%;
+    bottom: -1%;
+    background-color: #ddd;
+    opacity: 0.8;
+    z-index: 0;
+  }
+}
+
 button {
   margin: 10% auto 5%;
   width: 150px;
@@ -477,7 +567,31 @@ button {
   line-height: 15px;
 }
 
+button.canel {
+  background-color: transparent;
+  border: 1px solid rgb(87, 0, 0);
+}
+
 h1 {
   margin-bottom: 1%;
+}
+
+table {
+  width: 100%;
+  padding: 1% 2% 3%;
+}
+
+label {
+  display: block;
+  font-size: 18px;
+}
+
+input[type="text"] {
+  width: 50%;
+  height: 25px;
+  margin: 1% auto 5%;
+  display: block;
+  padding: 1% 2%;
+  font-size: 15px;
 }
 </style>
