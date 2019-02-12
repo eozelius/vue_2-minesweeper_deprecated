@@ -3,7 +3,9 @@
     :class="{ 'cell-container': true, active: active, flag: flag }"
     @click="emitCellClicked"
   >
-    <!-- <p v-if="mine" class="mine">X</p> -->
+    <div v-if="reavealMine" class="mine">
+      <img src="../assets/mine.png" alt="mine" />
+    </div>
     <p v-if="!active && !flag">{{ borderMines }}</p>
   </div>
 </template>
@@ -36,6 +38,16 @@ export default {
     flag: {
       type: Boolean,
       default: false
+    },
+    reveal: {
+      type: Boolean,
+      default: false
+    }
+  },
+
+  computed: {
+    reavealMine() {
+      return this.mine && this.reveal && !this.flag;
     }
   },
 
@@ -70,9 +82,12 @@ p {
 }
 
 .mine {
-  color: red;
-  font-weight: bold;
-  margin: 0 5px;
+  height: 50px;
+
+  img {
+    width: 54px;
+    height: 54px;
+  }
 }
 
 .flag {

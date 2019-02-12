@@ -43,6 +43,7 @@
             :mine="col.mine"
             :flag="col.flag"
             :active="col.active"
+            :reveal="col.reveal"
             :row="i"
             :col="j"
             :border-mines="col.borderMines"
@@ -142,7 +143,8 @@ export default {
             mine: false,
             active: true,
             borderMines: 0,
-            flag: false
+            flag: false,
+            reveal: false
           });
         }
       }
@@ -270,6 +272,7 @@ export default {
       if (this.board[row][col].mine) {
         alert("you lose!!");
         this.gameActive = false;
+        this.revealMines();
         this.pauseTimer();
         return;
       }
@@ -375,6 +378,14 @@ export default {
         }
       }
       return true;
+    },
+
+    revealMines() {
+      for (let r = 0; r < this.rows; r++) {
+        for (let c = 0; c < this.cols; c++) {
+          this.$set(this.board[r][c], "reveal", true);
+        }
+      }
     }
   },
 
