@@ -31,6 +31,12 @@
 
     <div class="gameplay-container">
       <h1>Minesweeper</h1>
+      <img
+        class="stopwatch"
+        src="../assets/stopwatch.png"
+        alt="stopwatch icon"
+      />
+      <p class="elapsed-time">{{ elapsedTime }}</p>
       <div class="row" v-for="(row, i) in board" :key="i">
         <div class="col" v-for="(col, j) in row" :key="j">
           <Cell
@@ -50,6 +56,7 @@
 
 <script>
 import Cell from "@/components/Cell.vue";
+import { clearInterval, setInterval } from "timers";
 
 export default {
   name: "Minesweeper-Board",
@@ -63,6 +70,10 @@ export default {
       resetCols: 4,
       resetMines: 5,
       safeCells: 2,
+      startTime: 0,
+      elapsedTime: 0,
+      timerInterval: null,
+      gameActive: false,
       errors: []
     };
   },
@@ -236,6 +247,11 @@ export default {
     },
 
     handleClick(row, col, flag) {
+      // First Click
+      if (this.allCellsActive()) {
+        this.startGame();
+      }
+
       if (flag) {
         this.handleFlagClick(row, col);
         return;
@@ -253,17 +269,43 @@ export default {
       // Triggered a mine
       if (this.board[row][col].mine) {
         alert("you lose!!");
-        this.resetGame();
+        this.gameActive = false;
+        this.pauseTimer();
         return;
       }
 
       this.gameWon();
     },
 
+    startGame() {
+      this.gameActive = true;
+      this.startTimer();
+    },
+
+    startTimer() {
+      this.startTime = Date.now();
+      this.timerInterval = setInterval(() => {
+        const elapsed = new Date(Date.now() - this.startTime);
+        this.elapsedTime = elapsed.getSeconds();
+      }, 1000);
+    },
+
+    pauseTimer() {
+      clearInterval(this.timerInterval);
+    },
+
+    resetTimer() {
+      this.startTime = 0;
+      this.elapsedTime = 0;
+      clearInterval(this.timerInterval);
+      this.startTimer();
+    },
+
     resetGame() {
       if (!this.validGame(this.resetRows, this.resetCols, this.resetMines)) {
         return;
       }
+      this.elapsedTime = 0;
       this.board = [];
       this.generateBoard(this.resetRows, this.resetCols, this.resetMines);
     },
@@ -305,6 +347,8 @@ export default {
     gameWon() {
       if (this.safeCells === 0 && this.allMinesFlagged()) {
         setTimeout(() => alert("you win"));
+        this.gameActive = false;
+        this.pauseTimer();
         return true;
       } else {
         return false;
@@ -315,6 +359,17 @@ export default {
       for (let r = 0; r < this.rows; r++) {
         for (let c = 0; c < this.cols; c++) {
           if (this.board[r][c].mine && !this.board[r][c].flag) {
+            return false;
+          }
+        }
+      }
+      return true;
+    },
+
+    allCellsActive() {
+      for (let r = 0; r < this.rows; r++) {
+        for (let c = 0; c < this.cols; c++) {
+          if (!this.board[r][c].active) {
             return false;
           }
         }
@@ -355,7 +410,8 @@ export default {
 }
 
 .reset-container {
-  padding: 0 0 5%;
+  padding: 5% 0 10%;
+  border: 1px solid #ccc;
 
   label {
     display: block;
@@ -371,17 +427,6 @@ export default {
     font-size: 15px;
   }
 
-  button {
-    margin: 10% auto 5%;
-    width: 150px;
-    height: 30px;
-    background-color: aliceblue;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 15px;
-    line-height: 15px;
-  }
-
   .errors-container {
     ul {
       list-style-type: none;
@@ -394,5 +439,34 @@ export default {
       margin-bottom: 10px;
     }
   }
+}
+
+.stopwatch {
+  width: 50px;
+  height: 50px;
+}
+
+.elapsed-time {
+  display: inline-block;
+  vertical-align: bottom;
+  font-size: 22px;
+  margin: 0;
+  font-weight: 400;
+  line-height: 55px;
+}
+
+button {
+  margin: 10% auto 5%;
+  width: 150px;
+  height: 30px;
+  background-color: aliceblue;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 15px;
+  line-height: 15px;
+}
+
+h1 {
+  margin-bottom: 1%;
 }
 </style>
