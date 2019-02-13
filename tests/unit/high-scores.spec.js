@@ -1,12 +1,20 @@
 import { shallowMount } from "@vue/test-utils";
-import { winGame } from "../specHelpers";
-import Board from "@/components/Board.vue";
+import HighScores from "@/components/HighScores.vue";
 
 describe("High Scores", () => {
   let wrapper;
 
   beforeEach(() => {
-    wrapper = shallowMount(Board);
+    wrapper = shallowMount(HighScores, {
+      propsData: {
+        showHighScoresModal: false
+      }
+    });
+    wrapper.vm.highScores = [];
+  });
+
+  afterEach(() => {
+    wrapper.vm.highScores = [];
   });
 
   describe("High Scores List", () => {
@@ -15,16 +23,12 @@ describe("High Scores", () => {
     });
 
     it("Adds a new high score to the list.", () => {
-      wrapper.vm.highScores = [
-        {
-          name: "Alberta",
-          time: 10
-        }
-      ];
-      expect(wrapper.findAll(".high-score").length).toEqual(1);
+      wrapper.vm.submitHighScore("Alberta", 10);
+      expect(wrapper.html()).toContain("Alberta");
     });
 
-    it("Sorts the list by time", () => {
+    it("Sorts the Scores by time", () => {
+      wrapper.vm.highScores = [];
       wrapper.vm.submitHighScore("Super SlowSki Sr.", 215);
       wrapper.vm.submitHighScore("SlowSki Jr.", 105);
       wrapper.vm.submitHighScore("Speedy", 5);
@@ -34,27 +38,18 @@ describe("High Scores", () => {
   });
 
   describe("High Scores Modal", () => {
-    it("Activates when the game is won", () => {
-      winGame(wrapper);
-      wrapper.vm.gameWon();
-      expect(wrapper.vm.showHighScoresModal).toEqual(true);
+    it("Activates when passed the 'showHighScoresModal' prop", () => {
+      expect(wrapper.find(".high-score-modal-container").exists()).toEqual(false); // eslint-disable-line prettier/prettier
+      wrapper.setProps({ showHighScoresModal: true });
+      expect(wrapper.find(".high-score-modal-container").exists()).toEqual(true); // eslint-disable-line prettier/prettier
     });
 
     it("Submits a HighScore", () => {
-      winGame(wrapper);
-      wrapper.vm.gameWon();
+      wrapper.setProps({ showHighScoresModal: true });
       wrapper.find("input[name='high-score']").setValue("Cool Hand Luke");
       wrapper.find("button.save-high-score").trigger("click");
       expect(wrapper.vm.highScores[0].name).toBe("Cool Hand Luke");
       expect(wrapper.vm.highScores[0].time).toBe(0);
-    });
-
-    it("Deactivates when play clicks save", () => {
-      winGame(wrapper);
-      wrapper.vm.gameWon();
-      expect(wrapper.vm.showHighScoresModal).toBe(true);
-      wrapper.find("button.canel-high-score").trigger("click");
-      expect(wrapper.vm.showHighScoresModal).toBe(false);
     });
   });
 });

@@ -3,8 +3,8 @@
     <!-- Left aside -->
     <aside class="details-container">
       <div class="mines-remaining">
-        <h3>Mines Remaining: {{ mines }}</h3>
-        <h3>Safe Cells: {{ safeCells }}</h3>
+        <h5>Mines Remaining: {{ mines }}</h5>
+        <h5>Safe Cells: {{ safeCells }}</h5>
       </div>
 
       <div class="reset-container">
@@ -65,53 +65,17 @@
       </div>
     </main>
 
-    <!-- High Scores -->
-    <aside class="high-scores-container">
-      <h1>High Scores</h1>
-      <table v-if="highScores.length > 0">
-        <tr>
-          <th>Rank</th>
-          <th>Name</th>
-          <th>Time</th>
-        </tr>
-
-        <tr
-          class="high-score"
-          v-for="(score, index) in highScores"
-          :key="index"
-        >
-          <td>{{ index + 1 }}.</td>
-          <td>{{ score.name }}</td>
-          <td>{{ score.time }}</td>
-        </tr>
-      </table>
-    </aside>
-
-    <!-- High Score Modal -->
-    <div v-if="showHighScoresModal" class="high-score-modal-container">
-      <div class="high-score-modal">
-        <div>
-          <h1>Winner!</h1>
-          <h3>Add your name to the High Scores List!</h3>
-          <input v-model="newHighScoreName" type="text" name="high-score" />
-
-          <div class="btns-container">
-            <button class="canel-high-score canel" @click="this.dismissModal">
-              Canel
-            </button>
-            <button class="save-high-score" @click="this.handleHighScoreSave">
-              Save
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="overlay"></div>
-    </div>
+    <HighScores
+      :show-high-scores-modal="showHighScoresModal"
+      v-on:dismiss-high-scores-modal="dismissModal"
+      :elapsed-time="elapsedTime"
+    />
   </div>
 </template>
 
 <script>
 import Cell from "@/components/Cell.vue";
+import HighScores from "@/components/HighScores.vue";
 import { clearInterval, setInterval } from "timers";
 
 export default {
@@ -131,9 +95,7 @@ export default {
       timerInterval: null,
       gameActive: false,
       errors: [],
-      highScores: [],
       showHighScoresModal: false,
-      newHighScoreName: "",
       youLost: false
     };
   },
@@ -443,36 +405,25 @@ export default {
       }
     },
 
-    submitHighScore(name, time) {
-      this.highScores = this.highScores
-        .concat({
-          name,
-          time
-        })
-        .sort((a, b) => a.time - b.time);
-    },
-
     revealModal() {
       this.showHighScoresModal = true;
     },
 
     dismissModal() {
       this.showHighScoresModal = false;
-    },
-
-    handleHighScoreSave() {
-      this.submitHighScore(this.newHighScoreName, this.elapsedTime);
-      this.dismissModal();
     }
   },
 
   components: {
-    Cell
+    Cell,
+    HighScores
   }
 };
 </script>
 
 <style lang="scss" scoped>
+@import "../styles/reset";
+
 .board-container {
   width: 75%;
   border: 1px solid #ccc;
@@ -503,14 +454,12 @@ export default {
 
   .errors-container {
     ul {
-      list-style-type: none;
+      padding: 0 10%;
     }
 
     li {
-      text-align: left;
+      text-align: center;
       color: maroon;
-      font-weight: 400;
-      margin-bottom: 10px;
     }
   }
 }
@@ -526,7 +475,6 @@ export default {
   p {
     display: inline-block;
     vertical-align: bottom;
-    font-size: 22px;
     margin: 0;
     font-weight: 400;
     line-height: 55px;
@@ -544,86 +492,8 @@ export default {
   .elapsed-time {
     display: inline-block;
     vertical-align: bottom;
-    font-size: 22px;
     margin: 0;
-    font-weight: 400;
     line-height: 55px;
   }
-}
-.high-scores-container {
-  width: 90%;
-  min-height: 200px;
-  margin: 5% auto 5%;
-}
-
-.high-score-modal-container {
-  .high-score-modal {
-    position: fixed;
-    top: 15%;
-    left: 25%;
-    right: 25%;
-    height: 400px;
-    background-color: #fff;
-    border-radius: 5px;
-    border: 1px solid #ccc;
-    z-index: 1;
-    opacity: 1;
-  }
-
-  .btns-container {
-    width: 50%;
-    display: flex;
-    margin: 15% auto;
-  }
-
-  .overlay {
-    position: fixed;
-    top: -1%;
-    left: -1%;
-    right: -1%;
-    bottom: -1%;
-    background-color: #ddd;
-    opacity: 0.8;
-    z-index: 0;
-  }
-}
-
-button {
-  margin: 10% auto 5%;
-  width: 150px;
-  height: 30px;
-  background-color: aliceblue;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 15px;
-  line-height: 15px;
-}
-
-button.canel {
-  background-color: transparent;
-  border: 1px solid rgb(87, 0, 0);
-}
-
-h1 {
-  margin-bottom: 1%;
-}
-
-table {
-  width: 100%;
-  padding: 1% 2% 3%;
-}
-
-label {
-  display: block;
-  font-size: 18px;
-}
-
-input[type="text"] {
-  width: 50%;
-  height: 25px;
-  margin: 1% auto 5%;
-  display: block;
-  padding: 1% 2%;
-  font-size: 15px;
 }
 </style>

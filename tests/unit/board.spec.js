@@ -78,6 +78,21 @@ describe("Board", () => {
     expect(wrapper.findAll(".row").length).toEqual(4);
   });
 
+  it("Activates when the game is won", () => {
+    winGame(wrapper);
+    wrapper.vm.gameWon();
+    expect(wrapper.vm.showHighScoresModal).toEqual(true);
+  });
+
+  it("Deactivates when play clicks save", () => {
+    wrapper = mount(Board);
+    winGame(wrapper);
+    wrapper.vm.gameWon();
+    expect(wrapper.vm.showHighScoresModal).toBe(true);
+    wrapper.find("button.canel-high-score").trigger("click");
+    expect(wrapper.vm.showHighScoresModal).toBe(false);
+  });
+
   // Endgame Scenarios
   it("[Lose] click a mine", () => {
     wrapper.vm.board[0][0].mine = true;

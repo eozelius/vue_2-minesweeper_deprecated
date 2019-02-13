@@ -2,27 +2,15 @@ import { shallowMount } from "@vue/test-utils";
 import Cell from "@/components/Cell.vue";
 
 describe("Cell", () => {
-  let mineWrapper;
+  let wrapper;
 
   beforeEach(() => {
-    mineWrapper = shallowMount(
-      <Cell
-        mine="true"
-        flag="false"
-        active="true"
-        row="0"
-        col="0"
-        border-mines="0"
-      />
-    );
+    wrapper = shallowMount(Cell);
   });
 
-  it.skip('emits a "click" event when clicked', () => {
-    // console.log(wrapper.vm);
-
-    const cell = mineWrapper.find(".cell-container");
-    // console.log(cell);
-    cell.trigger("click", {});
-    // console.log(cell.emitted());
+  it('emits a "click" event when clicked', () => {
+    const cell = wrapper.find(".cell-container");
+    cell.trigger("click");
+    expect(wrapper.emitted()).toEqual({ "cell-clicked": [[0, 0, false]] });
   });
 });
