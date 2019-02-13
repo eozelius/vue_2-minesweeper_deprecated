@@ -78,7 +78,7 @@
         <tr
           class="high-score"
           v-for="(score, index) in highScores"
-          :key="score.id"
+          :key="index"
         >
           <td>{{ index + 1 }}.</td>
           <td>{{ score.name }}</td>
@@ -96,8 +96,12 @@
           <input v-model="newHighScoreName" type="text" name="high-score" />
 
           <div class="btns-container">
-            <button @click="this.dismissModal" class="canel">Canel</button>
-            <button @click="this.handleHighScoreSave">Save</button>
+            <button class="canel-high-score canel" @click="this.dismissModal">
+              Canel
+            </button>
+            <button class="save-high-score" @click="this.handleHighScoreSave">
+              Save
+            </button>
           </div>
         </div>
       </div>
@@ -352,19 +356,14 @@ export default {
       clearInterval(this.timerInterval);
     },
 
-    resetTimer() {
-      this.startTime = 0;
-      this.elapsedTime = 0;
-      clearInterval(this.timerInterval);
-      this.startTimer();
-    },
-
     resetGame() {
       if (!this.validGame(this.resetRows, this.resetCols, this.resetMines)) {
         return;
       }
       this.youLost = false;
       this.elapsedTime = 0;
+      this.startTime = 0;
+      clearInterval(this.timerInterval);
       this.board = [];
       this.generateBoard(this.resetRows, this.resetCols, this.resetMines);
     },

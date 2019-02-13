@@ -1,24 +1,51 @@
 import { shallowMount } from "@vue/test-utils";
 import Board from "@/components/Board.vue";
 import Cell from "@/components/Cell.vue";
+import { winGame } from "../specHelpers";
 
-describe("Board", () => {
+describe("Timer", () => {
   let wrapper;
 
   beforeEach(() => {
     wrapper = shallowMount(Board);
   });
 
-  it("starts at 0", () => {
-    expect(wrapper.find(".elapsed-time").text()).toEqual("0");
+  it("starts when the first cell is clicked", () => {
+    const startTimerSpy = jest.spyOn(Board.methods, "startTimer");
+    wrapper = shallowMount(Board);
+    const cell = wrapper.find(Cell);
+    wrapper.vm.board[0][0].mine = false;
+    cell.vm.$emit("cell-clicked", 0, 0, false);
+    expect(startTimerSpy).toHaveBeenCalled();
   });
 
-  it.skip("starts when a cell is clicked", () => {
+  it("initializes to zero", () => {
+    expect(wrapper.vm.elapsedTime).toEqual(0);
+  });
+
+  it("Pauses when the game is lost", () => {
+    const pauseTimerSpy = jest.spyOn(Board.methods, "pauseTimer");
+    wrapper = shallowMount(Board);
     const cell = wrapper.find(Cell);
-    cell.trigger("click");
-    const elapsedTime = wrapper.find(".elapsed-time").text();
-    console.log("elapsedTime after click: ", elapsedTime);
-    console.log("vm.elapsedTime =>", wrapper.vm.gameActive);
-    expect(parseInt(elapsedTime) > 0).toEqual(true);
+    wrapper.vm.board[0][0].mine = true;
+    cell.vm.$emit("cell-clicked", 0, 0, false);
+    expect(pauseTimerSpy).toHaveBeenCalled();
+  });
+
+  it("Pauses when the game is won", () => {
+    const pauseTimerSpy = jest.spyOn(Board.methods, "pauseTimer");
+    wrapper = shallowMount(Board);
+    winGame(wrapper);
+    wrapper.vm.gameWon();
+    expect(pauseTimerSpy).toHaveBeenCalled();
+  });
+
+  it.skip("Restarts from zero, when the game is reset", () => {
+    const startTimerSpy = jest.spyOn(Board.methods, "resetTimer");
+    wrapper = shallowMount(Board);
+    expect(startTimerSpy).not.toHaveBeenCalled();
+    const resetBtn = wrapper.find(".reset-container button");
+    resetBtn.trigger("click");
+    expect(startTimerSpy).toHaveBeenCalled();
   });
 });

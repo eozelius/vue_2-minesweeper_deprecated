@@ -1,4 +1,5 @@
 import { shallowMount, mount } from "@vue/test-utils";
+import { flagAllMines, winGame } from "../specHelpers";
 import Board from "@/components/Board.vue";
 import Cell from "@/components/Cell.vue";
 
@@ -8,52 +9,6 @@ describe("Board", () => {
   beforeEach(() => {
     wrapper = shallowMount(Board);
   });
-
-  // Helper Methods
-  const flagAllMines = wrapper => {
-    if (wrapper === undefined) {
-      console.log("Board.spec.js::flagAllMinesWrapper requires a wrapper");
-      return;
-    }
-
-    for (let r = 0; r < wrapper.vm.rows; r++) {
-      for (let c = 0; c < wrapper.vm.cols; c++) {
-        if (wrapper.vm.board[r][c].mine) {
-          wrapper.vm.board[r][c].flag = true;
-        }
-      }
-    }
-  };
-
-  /*
-  const findMine = wrapper => {
-    if (wrapper === undefined) {
-      console.log("Board.spec.js::findMine() Must be passed a wrapper");
-      return;
-    }
-
-    for (let r = 0; r < wrapper.vm.rows; r++) {
-      for (let c = 0; c < wrapper.vm.cols; c++) {
-        if (wrapper.vm.board[r][c].mine) {
-          return {
-            row: r,
-            col: c
-          };
-        }
-      }
-    }
-  };
-  */
-
-  const winGame = wrapper => {
-    if (wrapper === undefined) {
-      console.log("Board.spec.js::winGame() Must be passed a wrapper");
-      return;
-    }
-
-    wrapper.vm.safeCells = 0;
-    flagAllMines(wrapper);
-  };
 
   it("defaults to 4x4 and 5 mines", () => {
     // Testing rendered output.  Treat Board like a blackbox.
@@ -72,7 +27,7 @@ describe("Board", () => {
 
   it("Rejects 0 rows", () => {
     const resetRowsInput = wrapper.find("input[name='reset-rows']");
-    resetRowsInput.setValue(`0`);
+    resetRowsInput.setValue("0");
     expect(wrapper.vm.errors.length >= 1).toEqual(true);
   });
 
