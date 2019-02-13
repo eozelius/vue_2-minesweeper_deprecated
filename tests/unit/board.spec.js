@@ -1,5 +1,6 @@
-import { shallowMount } from "@vue/test-utils";
+import { shallowMount, mount } from "@vue/test-utils";
 import Board from "@/components/Board.vue";
+import Cell from "@/components/Cell.vue";
 
 describe("Board", () => {
   let wrapper;
@@ -9,7 +10,12 @@ describe("Board", () => {
   });
 
   // Helper Methods
-  const flagAllMines = (wrapper = wrapper) => {
+  const flagAllMines = wrapper => {
+    if (wrapper === undefined) {
+      console.log("Board.spec.js::flagAllMinesWrapper requires a wrapper");
+      return;
+    }
+
     for (let r = 0; r < wrapper.vm.rows; r++) {
       for (let c = 0; c < wrapper.vm.cols; c++) {
         if (wrapper.vm.board[r][c].mine) {
@@ -19,14 +25,34 @@ describe("Board", () => {
     }
   };
 
+  /*
   const findMine = wrapper => {
+    if (wrapper === undefined) {
+      console.log("Board.spec.js::findMine() Must be passed a wrapper");
+      return;
+    }
+
     for (let r = 0; r < wrapper.vm.rows; r++) {
       for (let c = 0; c < wrapper.vm.cols; c++) {
         if (wrapper.vm.board[r][c].mine) {
-          return [r, c];
+          return {
+            row: r,
+            col: c
+          };
         }
       }
     }
+  };
+  */
+
+  const winGame = wrapper => {
+    if (wrapper === undefined) {
+      console.log("Board.spec.js::winGame() Must be passed a wrapper");
+      return;
+    }
+
+    wrapper.vm.safeCells = 0;
+    flagAllMines(wrapper);
   };
 
   it("defaults to 4x4 and 5 mines", () => {
@@ -99,18 +125,61 @@ describe("Board", () => {
 
   // Endgame Scenarios
   it("[Lose] click a mine", () => {
-    flagAllMines(wrapper);
-    const mine = findMine(wrapper);
-    const row = mine[0];
-    const col = mine[1];
-    wrapper.vm.board[row][col].flag = false;
-    expect(wrapper.vm.gameWon()).toEqual(false);
+    wrapper.vm.board[0][0].mine = true;
+    const cell = wrapper.find(Cell);
+    cell.vm.$emit("cell-clicked", 0, 0, false);
+
+    // State
+    expect(wrapper.vm.youLost).toEqual(true);
+    expect(wrapper.vm.gameActive).toEqual(false);
+
+    // Rendered output
+    expect(wrapper.find(".you-lost-container").exists()).toEqual(true);
+  });
+
+  it("passes a handleClick callback to Cell", () => {
+    const spy = jest.spyOn(Board.methods, "handleClick");
+    let wrapper = shallowMount(Board);
+    const cell = wrapper.find(Cell);
+    cell.vm.$emit("cell-clicked", 0, 1, false);
+    expect(spy).toHaveBeenCalledWith(0, 1, false);
+  });
+
+  it("can flag a cell", () => {
+    wrapper = shallowMount(Board);
+    const cell = wrapper.find(Cell);
+    expect(wrapper.vm.board[0][0].flag).toEqual(false);
+    expect(wrapper.find(".flag").exists()).toEqual(false);
+    cell.vm.$emit("cell-clicked", 0, 0, true);
+
+    // Test state
+    expect(wrapper.vm.board[0][0].flag).toEqual(true);
   });
 
   it("[Continue] All mines flagged, but one cell has not been clicked", () => {
     wrapper.vm.safeCells = 1;
     flagAllMines(wrapper);
     expect(wrapper.vm.gameWon()).toEqual(false);
+  });
+
+  it("can remove a flag", () => {
+    wrapper = mount(Board);
+    const cell = wrapper.find(Cell);
+    expect(wrapper.find(".flag").exists()).toEqual(false);
+    wrapper.vm.board[0][0].flag = true;
+    expect(wrapper.find(".flag").exists()).toEqual(true);
+    cell.vm.$emit("cell-clicked", 0, 0, true);
+    expect(wrapper.find(".flag").exists()).toEqual(false);
+  });
+
+  it("can replace a number with a flag", () => {
+    wrapper = mount(Board);
+    const cell = wrapper.find(Cell);
+    expect(wrapper.find(".flag").exists()).toEqual(false);
+    wrapper.vm.board[0][0].mine = false;
+    wrapper.vm.board[0][0].active = false;
+    cell.vm.$emit("cell-clicked", 0, 0, true);
+    expect(wrapper.find(".flag").exists()).toEqual(true);
   });
 
   it("[Continue] All cells clicked, but one mine has not been flagged", () => {
@@ -125,5 +194,11 @@ describe("Board", () => {
     wrapper.vm.safeCells = 0;
     flagAllMines(wrapper);
     expect(wrapper.vm.gameWon()).toEqual(true);
+  });
+
+  it("Activates the 'High Scores' modal when a player wins", () => {
+    expect(wrapper.vm.showHighScoresModal).toEqual(false);
+    winGame(wrapper);
+    expect(wrapper.vm.showHighScoresModal).toEqual(false);
   });
 });
