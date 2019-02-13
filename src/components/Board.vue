@@ -33,12 +33,22 @@
     <!-- Board -->
     <main class="gameplay-container">
       <h1>Minesweeper</h1>
-      <img
-        class="stopwatch"
-        src="../assets/stopwatch.png"
-        alt="stopwatch icon"
-      />
-      <p class="elapsed-time">{{ elapsedTime }}</p>
+
+      <div v-if="youLost" class="you-lost-container">
+        <img src="../assets/lost.png" alt="You Lose!" />
+
+        <p>You Lose!</p>
+      </div>
+
+      <div v-if="!youLost" class="timer-container">
+        <img
+          class="stopwatch"
+          src="../assets/stopwatch.png"
+          alt="stopwatch icon"
+        />
+        <p class="elapsed-time">{{ elapsedTime }}</p>
+      </div>
+
       <div class="row" v-for="(row, i) in board" :key="i">
         <div class="col" v-for="(col, j) in row" :key="j">
           <Cell
@@ -78,7 +88,7 @@
     </aside>
 
     <!-- High Score Modal -->
-    <div v-if="showModal" class="high-score-modal-container">
+    <div v-if="showHighScoresModal" class="high-score-modal-container">
       <div class="high-score-modal">
         <div>
           <h1>Winner!</h1>
@@ -118,8 +128,9 @@ export default {
       gameActive: false,
       errors: [],
       highScores: [],
-      showModal: false,
-      newHighScoreName: ""
+      showHighScoresModal: false,
+      newHighScoreName: "",
+      youLost: false
     };
   },
 
@@ -164,7 +175,6 @@ export default {
 
       // calculate number of cells that are not mines.
       this.safeCells = rows * cols - mines;
-      this.mines = mines;
 
       // Helper function to return a list of cells that do not have a mine place in them.
       const getAvailableCells = () => {
@@ -314,7 +324,7 @@ export default {
 
       // Triggered a mine
       if (this.board[row][col].mine) {
-        alert("you lose!!");
+        this.youLost = true;
         this.gameActive = false;
         this.revealMines();
         this.pauseTimer();
@@ -326,6 +336,7 @@ export default {
 
     startGame() {
       this.gameActive = true;
+      this.youLost = false;
       this.startTimer();
     },
 
@@ -352,6 +363,7 @@ export default {
       if (!this.validGame(this.resetRows, this.resetCols, this.resetMines)) {
         return;
       }
+      this.youLost = false;
       this.elapsedTime = 0;
       this.board = [];
       this.generateBoard(this.resetRows, this.resetCols, this.resetMines);
@@ -442,11 +454,11 @@ export default {
     },
 
     revealModal() {
-      this.showModal = true;
+      this.showHighScoresModal = true;
     },
 
     dismissModal() {
-      this.showModal = false;
+      this.showHighScoresModal = false;
     },
 
     handleHighScoreSave() {
@@ -504,20 +516,41 @@ export default {
   }
 }
 
-.stopwatch {
-  width: 50px;
-  height: 50px;
+.you-lost-container {
+  height: 56px;
+
+  img {
+    width: 50px;
+    height: 50px;
+  }
+
+  p {
+    display: inline-block;
+    vertical-align: bottom;
+    font-size: 22px;
+    margin: 0;
+    font-weight: 400;
+    line-height: 55px;
+  }
 }
 
-.elapsed-time {
-  display: inline-block;
-  vertical-align: bottom;
-  font-size: 22px;
-  margin: 0;
-  font-weight: 400;
-  line-height: 55px;
-}
+.timer-container {
+  height: 56px;
 
+  .stopwatch {
+    width: 50px;
+    height: 50px;
+  }
+
+  .elapsed-time {
+    display: inline-block;
+    vertical-align: bottom;
+    font-size: 22px;
+    margin: 0;
+    font-weight: 400;
+    line-height: 55px;
+  }
+}
 .high-scores-container {
   width: 90%;
   min-height: 200px;
