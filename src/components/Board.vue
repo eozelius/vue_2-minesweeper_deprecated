@@ -35,7 +35,7 @@
       <h1>Minesweeper</h1>
 
       <div v-if="youLost" class="you-lost-container">
-        <img src="../assets/lost.png" alt="You Lose!" />
+        <img src="../images/lost.png" alt="You Lose!" />
 
         <p>You Lose!</p>
       </div>
@@ -43,7 +43,7 @@
       <div v-if="!youLost" class="timer-container">
         <img
           class="stopwatch"
-          src="../assets/stopwatch.png"
+          src="../images/stopwatch.png"
           alt="stopwatch icon"
         />
         <p class="elapsed-time">{{ elapsedTime }}</p>

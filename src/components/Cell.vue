@@ -4,7 +4,7 @@
     @click="emitCellClicked"
   >
     <div v-if="reavealMine" class="mine">
-      <img src="../assets/mine.png" alt="mine" />
+      <img src="../images/mine.png" alt="mine" />
     </div>
     <p v-if="!active && !flag">{{ borderMines }}</p>
   </div>
@@ -91,7 +91,7 @@ p {
 }
 
 .flag {
-  background-image: url("../assets/flag-icon.png");
+  background-image: url("../images/flag-icon.png");
   background-repeat: no-repeat;
   background-size: 35px 35px;
   background-position: center;
