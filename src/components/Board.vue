@@ -7,40 +7,24 @@
         <h5>Safe Cells: {{ safeCells }}</h5>
       </div>
 
-      <div class="reset-container">
-        <div class="errors-container">
-          <ul class="errors">
-            <li v-for="(error, i) in errors" :key="i">{{ error }}</li>
-          </ul>
-        </div>
-
-        <!-- Rows -->
-        <label for="rows">Rows</label>
-        <input v-model="resetRows" name="reset-rows" type="text" />
-
-        <!-- Columns -->
-        <label for="cols">Columns</label>
-        <input v-model="resetCols" name="reset-cols" type="text" />
-
-        <!-- Mines -->
-        <label for="mines">Mines</label>
-        <input v-model="resetMines" name="reset-mines" type="text" />
-
-        <button @click="resetGame">Reset</button>
-      </div>
+      <reset
+        :errors="errors"
+        :reset-board="generateBoard"
+        :valid-board="validBoard"
+      />
     </aside>
 
     <!-- Board -->
     <main class="gameplay-container">
       <h1>Minesweeper</h1>
 
-      <div v-if="youLost" class="you-lost-container">
+      <div v-if="gameOver" class="you-lost-container">
         <img src="../images/lost.png" alt="You Lose!" />
 
         <p>You Lose!</p>
       </div>
 
-      <div v-if="!youLost" class="timer-container">
+      <div v-else class="timer-container">
         <img
           class="stopwatch"
           src="../images/stopwatch.png"
@@ -64,83 +48,83 @@
         </div>
       </div>
     </main>
-
-    <HighScores
-      :show-high-scores-modal="showHighScoresModal"
-      v-on:dismiss-high-scores-modal="dismissModal"
-      :elapsed-time="elapsedTime"
-    />
   </div>
 </template>
 
 <script>
 import Cell from "@/components/Cell.vue";
-import HighScores from "@/components/HighScores.vue";
+import Reset from "@/components/Reset.vue";
 import { clearInterval, setInterval } from "timers";
+import { mapMutations, mapState } from "vuex";
 
 export default {
-  name: "Minesweeper-Board",
+  name: "Board",
   data: () => {
     return {
       board: [],
       rows: 4,
       cols: 4,
       mines: 5,
-      resetRows: 4,
-      resetCols: 4,
-      resetMines: 5,
-      safeCells: 2,
-      startTime: 0,
-      elapsedTime: 0,
+      safeCells: 11,
       timerInterval: null,
-      gameActive: false,
-      errors: [],
-      showHighScoresModal: false,
-      youLost: false
+      errors: []
     };
+  },
+
+  props: {
+    gameActive: {
+      type: Boolean,
+      default: false
+    },
+    gameOver: {
+      type: Boolean,
+      default: false
+    },
+
+    // Callbacks
+    startGame: {
+      type: Function,
+      default: () => {}
+    },
+    resetGame: {
+      type: Function,
+      default: () => {}
+    },
+    winGame: {
+      type: Function,
+      default: () => {}
+    },
+    loseGame: {
+      type: Function,
+      default: () => {}
+    }
   },
 
   mounted() {
     this.generateBoard(this.rows, this.cols, this.mines);
   },
 
-  watch: {
-    resetRows: function(newRows) {
-      if (this.validGame(newRows, this.resetCols, this.resetMines)) {
-        this.resetRows = parseInt(newRows);
-      }
-    },
-
-    resetCols: function(newCols) {
-      if (this.validGame(this.resetRows, newCols, this.resetMines)) {
-        this.resetCols = parseInt(newCols);
-      }
-    },
-
-    resetMines: function(newMines) {
-      if (this.validGame(this.resetRows, this.resetCols, newMines)) {
-        this.resetMines = parseInt(newMines);
-      }
-    }
-  },
+  computed: mapState({
+    elapsedTime: state => state.timer.elapsedTime
+  }),
 
   methods: {
-    randomNum: max => {
-      // return a random number between 0 and max inclusively
-      return Math.floor(Math.random() * Math.floor(max));
-    },
+    ...mapMutations([
+      "setStartTime",
+      "incrementTime",
+      "resetTimer"
+    ]),
 
     generateBoard(rows = this.rows, cols = this.cols, mines = this.mines) {
-      if (!this.validGame(rows, cols, mines)) {
+      if (!this.validBoard(rows, cols, mines)) {
         return false;
       }
 
       this.rows = rows;
       this.cols = cols;
       this.mines = mines;
-
-      // calculate number of cells that are not mines.
       this.safeCells = rows * cols - mines;
+      this.board.splice(0, this.board.length);
 
       // Helper function to return a list of cells that do not have a mine place in them.
       const getAvailableCells = () => {
@@ -154,6 +138,8 @@ export default {
         }
         return availableCells;
       };
+
+      const randomNum = max => Math.floor(Math.random() * Math.floor(max));
 
       // Initialize board to entirely empty but active cells
       for (let r = 0; r < rows; r++) {
@@ -172,8 +158,8 @@ export default {
       // Place mines
       for (let m = 0; m < mines; m++) {
         const availableCells = getAvailableCells();
-        const randomNum = this.randomNum(availableCells.length);
-        const cell = availableCells[randomNum];
+        const num = randomNum(availableCells.length);
+        const cell = availableCells[num];
         const row = cell[0];
         const col = cell[1];
         this.$set(this.board[row][col], "mine", true);
@@ -243,6 +229,19 @@ export default {
           }
         }
       }
+      this.resetGame();
+      this.pauseTimer();
+      this.resetTimer();
+    },
+
+    isGameWon() {
+      if (this.safeCells === 0 && this.allMinesFlagged()) {
+        this.pauseTimer();
+        this.winGame();
+        return true;
+      } else {
+        return false;
+      }
     },
 
     handleFlagClick(row, col) {
@@ -265,13 +264,18 @@ export default {
       this.$set(this.board[row][col], "flag", true);
       this.$set(this.board[row][col], "active", false);
       this.mines--;
-      this.gameWon();
+      this.isGameWon();
     },
 
     handleClick(row, col, flag) {
       // First Click
       if (this.allCellsActive()) {
         this.startGame();
+        this.startTimer();
+      }
+
+      if (this.gameOver) {
+        return;
       }
 
       if (flag) {
@@ -290,47 +294,25 @@ export default {
 
       // Triggered a mine
       if (this.board[row][col].mine) {
-        this.youLost = true;
-        this.gameActive = false;
+        this.loseGame();
         this.revealMines();
         this.pauseTimer();
         return;
       }
 
-      this.gameWon();
-    },
-
-    startGame() {
-      this.gameActive = true;
-      this.youLost = false;
-      this.startTimer();
+      this.isGameWon();
     },
 
     startTimer() {
-      this.startTime = Date.now();
-      this.timerInterval = setInterval(() => {
-        const elapsed = new Date(Date.now() - this.startTime);
-        this.elapsedTime = elapsed.getSeconds();
-      }, 1000);
+      this.setStartTime()
+      this.timerInterval = setInterval(() => this.incrementTime(), 1000);
     },
 
     pauseTimer() {
       clearInterval(this.timerInterval);
     },
 
-    resetGame() {
-      if (!this.validGame(this.resetRows, this.resetCols, this.resetMines)) {
-        return;
-      }
-      this.youLost = false;
-      this.elapsedTime = 0;
-      this.startTime = 0;
-      clearInterval(this.timerInterval);
-      this.board = [];
-      this.generateBoard(this.resetRows, this.resetCols, this.resetMines);
-    },
-
-    validGame(rows, cols, mines) {
+    validBoard(rows = this.rows, cols = this.cols, mines = this.mines) {
       this.errors = [];
 
       if (isNaN(rows)) {
@@ -364,17 +346,6 @@ export default {
       return this.errors.length === 0 ? true : false;
     },
 
-    gameWon() {
-      if (this.safeCells === 0 && this.allMinesFlagged()) {
-        this.gameActive = false;
-        this.pauseTimer();
-        this.revealModal();
-        return true;
-      } else {
-        return false;
-      }
-    },
-
     allMinesFlagged() {
       for (let r = 0; r < this.rows; r++) {
         for (let c = 0; c < this.cols; c++) {
@@ -403,20 +374,12 @@ export default {
           this.$set(this.board[r][c], "reveal", true);
         }
       }
-    },
-
-    revealModal() {
-      this.showHighScoresModal = true;
-    },
-
-    dismissModal() {
-      this.showHighScoresModal = false;
     }
   },
 
   components: {
     Cell,
-    HighScores
+    Reset
   }
 };
 </script>
@@ -446,22 +409,6 @@ export default {
 .row {
   display: flex;
   justify-content: center;
-}
-
-.reset-container {
-  padding: 5% 0 10%;
-  border: 1px solid #ccc;
-
-  .errors-container {
-    ul {
-      padding: 0 10%;
-    }
-
-    li {
-      text-align: center;
-      color: maroon;
-    }
-  }
 }
 
 .you-lost-container {

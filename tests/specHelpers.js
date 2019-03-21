@@ -37,3 +37,14 @@ export const winGame = wrapper => {
   wrapper.vm.safeCells = 0;
   flagAllMines(wrapper);
 };
+
+export const activateAllCells = wrapper => {
+  if (wrapper === undefined) {
+    throw new Error("Board.spec.js::winGame() Must be passed a wrapper");
+  }
+  for (let r = 0; r < wrapper.vm.rows; r++) {
+    for (let c = 0; c < wrapper.vm.cols; c++) {
+      wrapper.vm.board[r][c].active = true;
+    }
+  }
+};

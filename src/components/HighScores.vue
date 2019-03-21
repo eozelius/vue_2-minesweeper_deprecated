@@ -44,12 +44,14 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+
 export default {
   name: "Minesweeper-High-Scores",
   data: () => {
     return {
       highScores: [],
-      newHighScoreName: ""
+      newHighScoreName: "",
     };
   },
 
@@ -58,14 +60,22 @@ export default {
       type: Boolean,
       default: false
     },
-    elapsedTime: {
-      type: Number,
-      default: 0
+    dismissHighScoresModal: {
+      type: Function,
+      default: () => {}
     }
   },
 
+  computed: mapState({
+    elapsedTime: state => state.timer.elapsedTime
+  }),
+
   methods: {
-    submitHighScore(name, time) {
+    submitHighScore(name, time) {      
+      if (!name || !time) {
+        return;
+      }
+
       this.highScores = this.highScores
         .concat({
           name,
@@ -74,13 +84,13 @@ export default {
         .sort((a, b) => a.time - b.time);
     },
 
-    dismissModal() {
-      this.$emit("dismiss-high-scores-modal");
-    },
-
     handleSave() {
       this.submitHighScore(this.newHighScoreName, this.elapsedTime);
       this.dismissModal();
+    },
+
+    dismissModal() {
+      this.dismissHighScoresModal();
     }
   }
 };
@@ -129,6 +139,10 @@ export default {
     background-color: #ddd;
     opacity: 0.8;
     z-index: 0;
+  }
+
+  button {
+    margin: 0 5px;
   }
 }
 

@@ -1,16 +1,16 @@
 <template>
   <div class="home">
-    <Board />
+    <Minesweeper />
   </div>
 </template>
 
 <script>
-import Board from "@/components/Board.vue";
+import Minesweeper from "@/components/Minesweeper.vue";
 
 export default {
   name: "home",
   components: {
-    Board
+    Minesweeper
   }
 };
 </script>

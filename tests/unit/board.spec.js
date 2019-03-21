@@ -1,174 +1,196 @@
-import { shallowMount, mount } from "@vue/test-utils";
-import { flagAllMines, winGame } from "../specHelpers";
+import { shallowMount } from "@vue/test-utils";
+import { flagAllMines, winGame, activateAllCells } from "../specHelpers";
 import Board from "@/components/Board.vue";
-import Cell from "@/components/Cell.vue";
+
+let wrapper;
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  wrapper = null;
+  wrapper = shallowMount(Board);
+});
 
 describe("Board", () => {
-  let wrapper;
+  describe("generateBoard", () => {
+    it("returns false when rows/cols/mines are invalid", () => {
+      expect(wrapper.vm.generateBoard(0, 0, 0)).toEqual(false);
+    });
 
-  beforeEach(() => {
-    wrapper = shallowMount(Board);
+    it("sets the correct number of safeCells", () => {
+      wrapper.vm.generateBoard(4, 5, 6);
+      expect(wrapper.vm.safeCells).toEqual(14);
+    });
+
+    it("initialized a 2D board of cells", () => {
+      wrapper.vm.generateBoard(4, 5, 6);
+      const arr = expect.any(Array);
+      expect(wrapper.vm.board).toEqual(arr);
+      expect(wrapper.vm.board[0]).toEqual(arr);
+    });
   });
 
-  it("defaults to 4x4 and 5 mines", () => {
-    // Testing rendered output.  Treat Board like a blackbox.
-    expect(wrapper.findAll(".row").length).toEqual(4);
-    expect(wrapper.findAll(".col").length).toEqual(16);
+  describe("non-flag click", () => {
+    it("Starts the game on first click", () => {
+      // expect(wrapper.vm.gameActive).toEqual(false);
+      const spy = jest.fn();
+      wrapper = shallowMount(Board, {
+        propsData: {
+          startGame: spy
+        }
+      });
+      wrapper.vm.handleClick(0, 0, false);
+      expect(spy).toHaveBeenCalledWith();
+    });
 
-    // Testing state directly.  Antipattern?
-    expect(wrapper.vm.rows).toEqual(4);
-    expect(wrapper.vm.cols).toEqual(4);
-    expect(wrapper.vm.mines).toEqual(5);
+    it("invokes Board.handleFlagClick if passed flag is true", () => {
+      const spy = jest.spyOn(Board.methods, "handleFlagClick");
+      wrapper = shallowMount(Board);
+      wrapper.vm.handleClick(0, 0, true);
+      expect(spy).toBeCalled();
+    });
+
+    it("returns false if the cell is inactive", () => {
+      wrapper.vm.board[0][0].active = false;
+      expect(wrapper.vm.handleClick(0, 0, false)).toEqual(false);
+    });
+
+    it("triggers a mine and reveals all mines", () => {
+      const revealMinesSpy = jest.spyOn(Board.methods, "revealMines");
+      wrapper = shallowMount(Board);
+      wrapper.vm.board[0][0].mine = true;
+      wrapper.vm.handleClick(0, 0, false);
+      expect(revealMinesSpy).toBeCalled();
+    });
+
+    it("triggers a mine and loses game", () => {
+      const loseGameSpy = jest.fn();
+      wrapper = shallowMount(Board, {
+        propsData: {
+          loseGame: loseGameSpy
+        }
+      });
+      wrapper.vm.board[0][0].mine = true;
+      wrapper.vm.handleClick(0, 0, false);
+      expect(loseGameSpy).toBeCalled();
+    });
+
+    it("checks to see if the game is over", () => {
+      const spy = jest.spyOn(Board.methods, "isGameWon");
+      wrapper = shallowMount(Board);
+      wrapper.vm.board[0][0].mine = false;
+      wrapper.vm.handleClick(0, 0, false);
+      expect(spy).toBeCalled();
+    });
   });
 
-  it("rejects generateBoard if board is invalid.", () => {
-    expect(wrapper.vm.generateBoard(0, 0, -1)).toEqual(false);
+  describe("flag click", () => {
+    it("places a flag", () => {
+      wrapper.vm.handleFlagClick(0, 0);
+      expect(wrapper.vm.board[0][0].flag).toEqual(true);
+      expect(wrapper.vm.board[0][0].active).toEqual(false);
+    });
+
+    it("decrements mines", () => {
+      const mines = wrapper.vm.mines;
+      wrapper.vm.handleFlagClick(0, 0);
+      expect(wrapper.vm.mines).toEqual(mines - 1);
+    });
+
+    it("removes a flag", () => {
+      const mines = wrapper.vm.mines;
+      wrapper.vm.board[0][0].flag = true;
+      wrapper.vm.handleFlagClick(0, 0);
+      expect(wrapper.vm.board[0][0].flag).toEqual(false);
+      expect(wrapper.vm.mines).toEqual(mines + 1);
+    });
+
+    it("replaces a number with a flag", () => {
+      wrapper.vm.board[0][0].active = false;
+      wrapper.vm.handleFlagClick(0, 0);
+      expect(wrapper.vm.board[0][0].flag).toEqual(true);
+    });
+
+    it("invokes gameWon()", () => {
+      const spy = jest.spyOn(Board.methods, "isGameWon");
+      wrapper = shallowMount(Board);
+      wrapper.vm.handleFlagClick(0, 0);
+      expect(spy).toBeCalled();
+    });
   });
 
-  it("Rejects 0 rows", () => {
-    const resetRowsInput = wrapper.find("input[name='reset-rows']");
-    resetRowsInput.setValue("0");
-    expect(wrapper.vm.errors.length >= 1).toEqual(true);
+  describe("isGameWon", () => {
+    it("returns true if all mines have been flagged and non-mines have been clicked", () => {
+      expect(wrapper.vm.isGameWon()).toEqual(false);
+      winGame(wrapper);
+      expect(wrapper.vm.isGameWon()).toEqual(true);
+    });
+
+    it("returns false unless all mines have been flagged.", () => {
+      wrapper.vm.board[0][0].mine = true;
+      expect(wrapper.vm.isGameWon()).toEqual(false);
+    });
   });
 
-  it("Rejects isNaN rows", () => {
-    const resetRowsInput = wrapper.find("input[name='reset-rows']");
-    resetRowsInput.setValue("asdf");
-    expect(wrapper.vm.errors.length >= 1).toEqual(true);
+  describe("revealMines", () => {
+    it("reveals all mines", () => {
+      expect(wrapper.vm.board[0][0].reveal).toEqual(false);
+      wrapper.vm.revealMines();
+      expect(wrapper.vm.board[0][0].reveal).toEqual(true);
+    });
   });
 
-  it("Rejects invalid number of Columns", () => {
-    const resetColsInput = wrapper.find("input[name='reset-cols']");
-    resetColsInput.setValue(`-1`);
+  describe("validGame", () => {
+    it("Rejects 0 rows", () => {
+      wrapper.vm.rows = 0;
+      expect(wrapper.vm.validBoard()).toEqual(false);
+      expect(wrapper.vm.errors.length >= 1).toEqual(true);
+    });
 
-    // Test rendered output
-    const errors = wrapper.findAll(".errors li");
-    expect(errors.length >= 1).toEqual(true);
+    it("Rejects isNaN rows", () => {
+      wrapper.vm.rows = "asdf";
+      expect(wrapper.vm.validBoard()).toEqual(false);
+      expect(wrapper.vm.errors.length >= 1).toEqual(true);
+    });
 
-    // Test vm state
-    expect(wrapper.vm.errors.length >= 1).toEqual(true);
+    it("Rejects invalid number of Columns", () => {
+      wrapper.vm.cols = -1;
+      expect(wrapper.vm.validBoard()).toEqual(false);
+      expect(wrapper.vm.errors.length >= 1).toEqual(true);
+    });
+
+    it("Rejects invalid number of mines", () => {
+      wrapper.vm.rows = 4;
+      wrapper.vm.cols = 4;
+      wrapper.vm.mines = 16;
+      expect(wrapper.vm.validBoard()).toEqual(false);
+      expect(wrapper.vm.errors.length >= 1).toEqual(true);
+    });
   });
 
-  it("Rejects invalid number of mines", () => {
-    const newMinesInput = wrapper.find("input[name='reset-mines']");
-    // Default board is 4x4 = 16 cells, so 17 mines in 16 cells in invalid.
-    newMinesInput.setValue("17");
-    expect(wrapper.vm.errors.length >= 1).toEqual(true);
+  describe("allMinesFlagged", () => {
+    it("returns true if all mines have been flagged", () => {
+      flagAllMines(wrapper);
+      expect(wrapper.vm.allMinesFlagged()).toEqual(true);
+    });
+
+    it("returns false if all mines have been flagged", () => {
+      flagAllMines(wrapper);
+      wrapper.vm.board[0][0].mine = true;
+      wrapper.vm.board[0][0].flag = false;
+      expect(wrapper.vm.allMinesFlagged()).toEqual(false);
+    });
   });
 
-  it("provides a button to reset the game", () => {
-    const resetBtn = wrapper.find(".reset-container button");
-    // Initial state
-    expect(wrapper.findAll(".row").length).toEqual(4);
-    expect(wrapper.findAll(".col").length).toEqual(16);
+  describe("allCellsActive", () => {
+    it("returns true if all cells are active", () => {
+      activateAllCells(wrapper);
+      expect(wrapper.vm.allCellsActive()).toEqual(true);
+    });
 
-    // Set new values
-    wrapper.find("input[name='reset-rows']").setValue("3");
-    wrapper.find("input[name='reset-cols']").setValue("3");
-    resetBtn.trigger("click");
-
-    expect(wrapper.findAll(".row").length).toEqual(3);
-    expect(wrapper.findAll(".col").length).toEqual(9);
-  });
-
-  it("will not reset if errors are present", () => {
-    expect(wrapper.findAll(".row").length).toEqual(4);
-    wrapper.find("input[name='reset-rows']").setValue("0");
-    wrapper.find(".reset-container button").trigger("click");
-    expect(wrapper.findAll(".row").length).toEqual(4);
-  });
-
-  it("Activates when the game is won", () => {
-    winGame(wrapper);
-    wrapper.vm.gameWon();
-    expect(wrapper.vm.showHighScoresModal).toEqual(true);
-  });
-
-  it("Deactivates when play clicks save", () => {
-    wrapper = mount(Board);
-    winGame(wrapper);
-    wrapper.vm.gameWon();
-    expect(wrapper.vm.showHighScoresModal).toBe(true);
-    wrapper.find("button.canel-high-score").trigger("click");
-    expect(wrapper.vm.showHighScoresModal).toBe(false);
-  });
-
-  // Endgame Scenarios
-  it("[Lose] click a mine", () => {
-    wrapper.vm.board[0][0].mine = true;
-    const cell = wrapper.find(Cell);
-    cell.vm.$emit("cell-clicked", 0, 0, false);
-
-    // State
-    expect(wrapper.vm.youLost).toEqual(true);
-    expect(wrapper.vm.gameActive).toEqual(false);
-
-    // Rendered output
-    expect(wrapper.find(".you-lost-container").exists()).toEqual(true);
-  });
-
-  it("passes a handleClick callback to Cell", () => {
-    const spy = jest.spyOn(Board.methods, "handleClick");
-    let wrapper = shallowMount(Board);
-    const cell = wrapper.find(Cell);
-    cell.vm.$emit("cell-clicked", 0, 1, false);
-    expect(spy).toHaveBeenCalledWith(0, 1, false);
-  });
-
-  it("can flag a cell", () => {
-    wrapper = shallowMount(Board);
-    const cell = wrapper.find(Cell);
-    expect(wrapper.vm.board[0][0].flag).toEqual(false);
-    expect(wrapper.find(".flag").exists()).toEqual(false);
-    cell.vm.$emit("cell-clicked", 0, 0, true);
-
-    // Test state
-    expect(wrapper.vm.board[0][0].flag).toEqual(true);
-  });
-
-  it("[Continue] All mines flagged, but one cell has not been clicked", () => {
-    wrapper.vm.safeCells = 1;
-    flagAllMines(wrapper);
-    expect(wrapper.vm.gameWon()).toEqual(false);
-  });
-
-  it("can remove a flag", () => {
-    wrapper = mount(Board);
-    const cell = wrapper.find(Cell);
-    expect(wrapper.find(".flag").exists()).toEqual(false);
-    wrapper.vm.board[0][0].flag = true;
-    expect(wrapper.find(".flag").exists()).toEqual(true);
-    cell.vm.$emit("cell-clicked", 0, 0, true);
-    expect(wrapper.find(".flag").exists()).toEqual(false);
-  });
-
-  it("can replace a number with a flag", () => {
-    wrapper = mount(Board);
-    const cell = wrapper.find(Cell);
-    expect(wrapper.find(".flag").exists()).toEqual(false);
-    wrapper.vm.board[0][0].mine = false;
-    wrapper.vm.board[0][0].active = false;
-    cell.vm.$emit("cell-clicked", 0, 0, true);
-    expect(wrapper.find(".flag").exists()).toEqual(true);
-  });
-
-  it("[Continue] All cells clicked, but one mine has not been flagged", () => {
-    wrapper.vm.safeCells = 0;
-    flagAllMines(wrapper);
-    wrapper.vm.board[0][0].mine = true;
-    wrapper.vm.board[0][0].flag = false;
-    expect(wrapper.vm.gameWon()).toEqual(false);
-  });
-
-  it("[Winning] All mines have been flagged and other cells clicked", () => {
-    wrapper.vm.safeCells = 0;
-    flagAllMines(wrapper);
-    expect(wrapper.vm.gameWon()).toEqual(true);
-  });
-
-  it("Activates the 'High Scores' modal when a player wins", () => {
-    expect(wrapper.vm.showHighScoresModal).toEqual(false);
-    winGame(wrapper);
-    expect(wrapper.vm.showHighScoresModal).toEqual(false);
+    it("returns false if all cells are active", () => {
+      activateAllCells(wrapper);
+      wrapper.vm.board[0][0].active = false;
+      expect(wrapper.vm.allCellsActive()).toEqual(false);
+    });
   });
 });

@@ -3,7 +3,7 @@ import Board from "@/components/Board.vue";
 import Cell from "@/components/Cell.vue";
 import { winGame } from "../specHelpers";
 
-describe("Timer", () => {
+describe.skip("Timer", () => {
   let wrapper;
 
   beforeEach(() => {
