@@ -51,7 +51,7 @@ export default {
   data: () => {
     return {
       highScores: [],
-      newHighScoreName: "",
+      newHighScoreName: ""
     };
   },
 
@@ -71,7 +71,7 @@ export default {
   }),
 
   methods: {
-    submitHighScore(name, time) {      
+    submitHighScore(name, time) {
       if (!name || !time) {
         return;
       }
@@ -149,5 +149,18 @@ export default {
 table {
   width: 100%;
   padding: 1% 2% 3%;
+}
+
+@media screen and (max-width: 500px) {
+  .high-score-modal-container {
+    .high-score-modal {
+      left: 5%;
+      right: 5%;
+    }
+
+    input {
+      border: 1px solid #ccc;
+    }
+  }
 }
 </style>

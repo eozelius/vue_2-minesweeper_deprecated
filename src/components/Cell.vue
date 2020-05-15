@@ -53,7 +53,10 @@ export default {
 
   methods: {
     emitCellClicked(e) {
-      const flag = e.altKey ? true : false;
+      const flag =
+        e.altKey || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey
+          ? true
+          : false;
       this.$emit("cell-clicked", this.row, this.col, flag);
     }
   }

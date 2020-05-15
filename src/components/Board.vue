@@ -17,6 +17,11 @@
     <!-- Board -->
     <main class="gameplay-container">
       <h1>Minesweeper</h1>
+      <h3>
+        Flags Bombs
+        <img class="flag-instruction" src="../images/flag-icon.png" /> with
+        <span class="bold">Shift + Click</span>
+      </h3>
 
       <div v-if="gameOver" class="you-lost-container">
         <img src="../images/lost.png" alt="You Lose!" />
@@ -109,11 +114,7 @@ export default {
   }),
 
   methods: {
-    ...mapMutations([
-      "setStartTime",
-      "incrementTime",
-      "resetTimer"
-    ]),
+    ...mapMutations(["setStartTime", "incrementTime", "resetTimer"]),
 
     generateBoard(rows = this.rows, cols = this.cols, mines = this.mines) {
       if (!this.validBoard(rows, cols, mines)) {
@@ -304,7 +305,7 @@ export default {
     },
 
     startTimer() {
-      this.setStartTime()
+      this.setStartTime();
       this.timerInterval = setInterval(() => this.incrementTime(), 1000);
     },
 
@@ -394,6 +395,10 @@ export default {
   padding: 1% 2% 5%;
 }
 
+img.flag-instruction {
+  width: 7%;
+}
+
 .details-container {
   width: 24%;
   display: inline-block;
@@ -441,6 +446,30 @@ export default {
     vertical-align: bottom;
     margin: 0;
     line-height: 55px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .board-container {
+    width: 90%;
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  .gameplay-container {
+    display: block;
+    width: 100%;
+  }
+
+  .details-container {
+    width: 90%;
+    border: 1px solid #ccc;
+    margin: 15% auto 5%;
+    padding: 5% 0;
+  }
+
+  .reset-container {
+    border: none;
   }
 }
 </style>

@@ -18,7 +18,7 @@
     <label for="mines">Mines</label>
     <input v-model="resetMines" name="reset-mines" type="text" />
 
-    <button @click="handleClick">Reset</button>
+    <button class="reset-button" @click="handleClick">Reset</button>
   </div>
 </template>
 
@@ -87,6 +87,14 @@ export default {
       text-align: center;
       color: maroon;
     }
+  }
+
+  button.reset-button {
+    width: 90%;
+  }
+
+  input {
+    border: 1px solid #ccc;
   }
 }
 </style>
