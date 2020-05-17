@@ -20,7 +20,7 @@
       <h3>
         Flags Bombs
         <img class="flag-instruction" src="../images/flag-icon.png" /> with
-        <span class="bold">Shift + Click</span>
+        <span class="bold">{{ clickInstructions }}</span>
       </h3>
 
       <div v-if="gameOver" class="you-lost-container">
@@ -61,6 +61,7 @@ import Cell from "@/components/Cell.vue";
 import Reset from "@/components/Reset.vue";
 import { clearInterval, setInterval } from "timers";
 import { mapMutations, mapState } from "vuex";
+import isMobile from "@/utils/isMobile";
 
 export default {
   name: "Board",
@@ -109,9 +110,12 @@ export default {
     this.generateBoard(this.rows, this.cols, this.mines);
   },
 
-  computed: mapState({
-    elapsedTime: state => state.timer.elapsedTime
-  }),
+  computed: {
+    ...mapState({
+      elapsedTime: state => state.timer.elapsedTime
+    }),
+    clickInstructions: () => (isMobile() ? "Long Press" : "Shift + Click")
+  },
 
   methods: {
     ...mapMutations(["setStartTime", "incrementTime", "resetTimer"]),
@@ -396,7 +400,7 @@ export default {
 }
 
 img.flag-instruction {
-  width: 7%;
+  width: 30px;
 }
 
 .details-container {
@@ -466,10 +470,6 @@ img.flag-instruction {
     border: 1px solid #ccc;
     margin: 15% auto 5%;
     padding: 5% 0;
-  }
-
-  .reset-container {
-    border: none;
   }
 }
 </style>

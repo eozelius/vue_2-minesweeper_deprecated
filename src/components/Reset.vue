@@ -6,17 +6,19 @@
       </ul>
     </div>
 
-    <!-- Rows -->
-    <label for="rows">Rows</label>
-    <input v-model="resetRows" name="reset-rows" type="text" />
+    <div class="form-inputs-container">
+      <!-- Rows -->
+      <label for="rows">Rows</label>
+      <input v-model="resetRows" name="reset-rows" type="text" />
 
-    <!-- Columns -->
-    <label for="cols">Columns</label>
-    <input v-model="resetCols" name="reset-cols" type="text" />
+      <!-- Columns -->
+      <label for="cols">Columns</label>
+      <input v-model="resetCols" name="reset-cols" type="text" />
 
-    <!-- Mines -->
-    <label for="mines">Mines</label>
-    <input v-model="resetMines" name="reset-mines" type="text" />
+      <!-- Mines -->
+      <label for="mines">Mines</label>
+      <input v-model="resetMines" name="reset-mines" type="text" />
+    </div>
 
     <button class="reset-button" @click="handleClick">Reset</button>
   </div>
@@ -95,6 +97,20 @@ export default {
 
   input {
     border: 1px solid #ccc;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .reset-container {
+    border: none;
+    display: flex;
+    flex-direction: column-reverse;
+  }
+
+  button.reset-button {
+    margin: 0 auto 35px;
+    width: 65%;
+    height: 40px;
   }
 }
 </style>

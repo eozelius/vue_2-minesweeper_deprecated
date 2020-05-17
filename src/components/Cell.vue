@@ -1,7 +1,10 @@
 <template>
   <div
     :class="{ 'cell-container': true, active: active, flag: flag }"
-    @click="emitCellClicked"
+    @click="handleClick"
+    @touchstart="handleTouchStart"
+    @touchcancel="handleTouchCancel"
+    @touchend="handleTouchEnd"
   >
     <div v-if="reavealMine" class="mine">
       <img src="../images/mine.png" alt="mine" />
@@ -13,6 +16,13 @@
 <script>
 export default {
   name: "minesweeper-Cell",
+
+  data: function() {
+    return {
+      longPressCounter: 0,
+      longPressInterval: null
+    };
+  },
 
   props: {
     mine: {
@@ -52,12 +62,45 @@ export default {
   },
 
   methods: {
-    emitCellClicked(e) {
-      const flag =
-        e.altKey || e.ctrlKey || e.altKey || e.metaKey || e.shiftKey
-          ? true
-          : false;
-      this.$emit("cell-clicked", this.row, this.col, flag);
+    emitCellClicked(row, col, flag) {
+      this.$emit("cell-clicked", row, col, flag);
+    },
+
+    handleClick(e) {
+      if (this.longPressCounter) {
+        return;
+      }
+      const flag = this.isMarkingFlag(e);
+      this.emitCellClicked(this.row, this.col, flag);
+    },
+
+    handleTouchStart() {
+      this.longPressInterval = setInterval(() => {
+        this.longPressCounter += 10;
+      }, 10);
+    },
+
+    handleTouchEnd(e) {
+      clearInterval(this.longPressInterval);
+      const flag = this.isMarkingFlag(e);
+      this.emitCellClicked(this.row, this.col, flag);
+      this.longPressCounter = 0;
+    },
+
+    handleTouchCancel() {
+      clearInterval(this.longPressInterval);
+      this.longPressCounter = 0;
+    },
+
+    isMarkingFlag(e) {
+      return (
+        e.altKey ||
+        e.ctrlKey ||
+        e.altKey ||
+        e.metaKey || // Cmd or Windows key
+        e.shiftKey ||
+        this.longPressCounter > 80
+      );
     }
   }
 };
