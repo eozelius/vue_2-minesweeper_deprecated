@@ -1,10 +1,9 @@
 <template>
   <div
     :class="{ 'cell-container': true, active: active, flag: flag }"
+    @mousedown="handleMouseDown"
+    @mouseup="handleMouseUp"
     @click="handleClick"
-    @touchstart="handleTouchStart"
-    @touchcancel="handleTouchCancel"
-    @touchend="handleTouchEnd"
   >
     <div v-if="reavealMine" class="mine">
       <img src="../images/mine.png" alt="mine" />
@@ -14,6 +13,8 @@
 </template>
 
 <script>
+import isMobile from "@/utils/isMobile";
+
 export default {
   name: "minesweeper-Cell",
 
@@ -67,28 +68,29 @@ export default {
     },
 
     handleClick(e) {
-      if (this.longPressCounter) {
+      if (isMobile() || this.longPressCounter) {
         return;
       }
       const flag = this.isMarkingFlag(e);
       this.emitCellClicked(this.row, this.col, flag);
     },
 
-    handleTouchStart() {
+    handleMouseDown() {
+      if (!isMobile()) {
+        return false;
+      }
       this.longPressInterval = setInterval(() => {
         this.longPressCounter += 10;
       }, 10);
     },
 
-    handleTouchEnd(e) {
+    handleMouseUp() {
+      if (!isMobile()) {
+        return false;
+      }
       clearInterval(this.longPressInterval);
-      const flag = this.isMarkingFlag(e);
+      const flag = this.longPressCounter > 130;
       this.emitCellClicked(this.row, this.col, flag);
-      this.longPressCounter = 0;
-    },
-
-    handleTouchCancel() {
-      clearInterval(this.longPressInterval);
       this.longPressCounter = 0;
     },
 
@@ -98,8 +100,7 @@ export default {
         e.ctrlKey ||
         e.altKey ||
         e.metaKey || // Cmd or Windows key
-        e.shiftKey ||
-        this.longPressCounter > 80
+        e.shiftKey
       );
     }
   }
