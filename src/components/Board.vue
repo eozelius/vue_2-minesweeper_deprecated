@@ -240,9 +240,13 @@ export default {
     },
 
     isGameWon() {
-      if (this.safeCells === 0 && this.allMinesFlagged()) {
+      if (
+        (this.safeCells === 0 && this.allMinesFlagged()) ||
+        this.allSafeCellsClicked()
+      ) {
         this.pauseTimer();
         this.winGame();
+        this.flagActiveMines();
         return true;
       } else {
         return false;
@@ -360,6 +364,29 @@ export default {
         }
       }
       return true;
+    },
+
+    allSafeCellsClicked() {
+      for (let r = 0; r < this.rows; r++) {
+        for (let c = 0; c < this.cols; c++) {
+          // if cell has not been clicked, and it is not a mine
+          if (this.board[r][c].active && !this.board[r][c].mine) {
+            return false;
+          }
+        }
+      }
+      return true;
+    },
+
+    flagActiveMines() {
+      for (let r = 0; r < this.rows; r++) {
+        for (let c = 0; c < this.cols; c++) {
+          if (this.board[r][c].active && this.board[r][c].mine) {
+            this.board[r][c].active = false;
+            this.board[r][c].flag = true;
+          }
+        }
+      }
     },
 
     allCellsActive() {
