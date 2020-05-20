@@ -1,8 +1,8 @@
 <template>
   <div
     :class="{ 'cell-container': true, active: active, flag: flag }"
-    @mousedown="handleMouseDown"
-    @mouseup="handleMouseUp"
+    @touchstart="handleTouchStart"
+    @touchend="handleTouchEnd"
     @click="handleClick"
   >
     <div v-if="reavealMine" class="mine">
@@ -75,7 +75,7 @@ export default {
       this.emitCellClicked(this.row, this.col, flag);
     },
 
-    handleMouseDown() {
+    handleTouchStart() {
       if (!isMobile()) {
         return false;
       }
@@ -84,7 +84,7 @@ export default {
       }, 10);
     },
 
-    handleMouseUp() {
+    handleTouchEnd() {
       if (!isMobile()) {
         return false;
       }
