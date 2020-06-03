@@ -5,6 +5,9 @@
     @touchend="handleTouchEnd"
     @click="handleClick"
   >
+    <div v-if="flag">
+      <img src="../images/flag.png" alt="flag" />
+    </div>
     <div v-if="reavealMine" class="mine">
       <img src="../images/mine.png" alt="mine" />
     </div>
@@ -138,9 +141,14 @@ p {
 }
 
 .flag {
-  background-image: url("../images/flag-icon.png");
   background-repeat: no-repeat;
   background-size: 35px 35px;
   background-position: center;
+
+  img {
+    width: 40px;
+    height: 40px;
+    padding: 5px;
+  }
 }
 </style>

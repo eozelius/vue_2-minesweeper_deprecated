@@ -19,7 +19,7 @@
       <h1>Minesweeper</h1>
       <h3>
         Flags Bombs
-        <img class="flag-instruction" src="../images/flag-icon.png" /> with
+        <img class="flag-instruction" src="../images/flag.png" /> with
         <span class="bold">{{ clickInstructions }}</span>
       </h3>
 
