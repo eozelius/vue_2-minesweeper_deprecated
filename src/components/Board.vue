@@ -240,10 +240,7 @@ export default {
     },
 
     isGameWon() {
-      if (
-        (this.safeCells === 0 && this.allMinesFlagged()) ||
-        this.allSafeCellsClicked()
-      ) {
+      if (this.allMinesFlagged() || this.allSafeCellsClicked()) {
         this.pauseTimer();
         this.winGame();
         this.flagActiveMines();

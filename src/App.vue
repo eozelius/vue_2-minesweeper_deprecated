@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div id="nav">
-      <router-link to="/">Minesweeper</router-link>
+      <!-- <router-link to="/">Minesweeper</router-link> -->
     </div>
     <router-view />
   </div>
