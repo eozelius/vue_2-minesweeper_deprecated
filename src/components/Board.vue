@@ -23,7 +23,7 @@
         <span class="bold">{{ clickInstructions }}</span>
       </h3>
 
-      <div v-if="gameOver" class="you-lost-container">
+      <div v-if="displayYouLost" class="you-lost-container">
         <img src="../images/lost.png" alt="You Lose!" />
 
         <p>You Lose!</p>
@@ -73,7 +73,8 @@ export default {
       mines: 5,
       safeCells: 11,
       timerInterval: null,
-      errors: []
+      errors: [],
+      displayYouLost: false
     };
   },
 
@@ -130,6 +131,8 @@ export default {
       this.mines = mines;
       this.safeCells = rows * cols - mines;
       this.board.splice(0, this.board.length);
+      this.displayYouLost = false;
+      
 
       // Helper function to return a list of cells that do not have a mine place in them.
       const getAvailableCells = () => {
@@ -274,10 +277,14 @@ export default {
     },
 
     handleClick(row, col, flag) {
+      console.log("Board.vue handleClick() this.gameOver => ", this.gameOver);
+      console.log("Board.vue handleClick() (this.allCellsActive()) => ", (this.allCellsActive()));
+
       // First Click
       if (this.allCellsActive()) {
         this.startGame();
         this.startTimer();
+        this.displayYouLost = false;
       }
 
       if (this.gameOver) {
@@ -303,6 +310,7 @@ export default {
         this.loseGame();
         this.revealMines();
         this.pauseTimer();
+        this.displayYouLost = true;
         return;
       }
 
