@@ -132,7 +132,7 @@ export default {
       this.safeCells = rows * cols - mines;
       this.board.splice(0, this.board.length);
       this.displayYouLost = false;
-      
+      this.mineDensity = this.mines / (this.rows * this.cols);
 
       // Helper function to return a list of cells that do not have a mine place in them.
       const getAvailableCells = () => {
@@ -245,7 +245,7 @@ export default {
     isGameWon() {
       if (this.allMinesFlagged() || this.allSafeCellsClicked()) {
         this.pauseTimer();
-        this.winGame();
+        this.winGame(this.mineDensity);
         this.flagActiveMines();
         return true;
       } else {
@@ -277,9 +277,6 @@ export default {
     },
 
     handleClick(row, col, flag) {
-      console.log("Board.vue handleClick() this.gameOver => ", this.gameOver);
-      console.log("Board.vue handleClick() (this.allCellsActive()) => ", (this.allCellsActive()));
-
       // First Click
       if (this.allCellsActive()) {
         this.startGame();

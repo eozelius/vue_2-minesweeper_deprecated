@@ -6,6 +6,7 @@
         <tr>
           <th>Rank</th>
           <th>Name</th>
+          <th>Difficulty</th>
           <th>Time</th>
         </tr>
 
@@ -16,6 +17,7 @@
         >
           <td>{{ index + 1 }}.</td>
           <td>{{ score.name }}</td>
+          <td>{{ score.density * 100 }}</td>
           <td>{{ score.time }}</td>
         </tr>
       </table>
@@ -47,7 +49,7 @@
 import { mapState } from "vuex";
 
 export default {
-  name: "Minesweeper-High-Scores",
+  name: "High-Scores",
   data: () => {
     return {
       highScores: [],
@@ -63,6 +65,10 @@ export default {
     dismissHighScoresModal: {
       type: Function,
       default: () => {}
+    },
+    mineDensity: {
+      type: Number,
+      default: 0
     }
   },
 
@@ -72,16 +78,23 @@ export default {
 
   methods: {
     submitHighScore(name, time) {
-      if (!name || !time) {
+      if (!name || !time || !this.mineDensity) {
         return;
       }
 
       this.highScores = this.highScores
         .concat({
           name,
-          time
+          time,
+          density: this.mineDensity
         })
-        .sort((a, b) => a.time - b.time);
+        .sort((a, b) => {
+          if (a.density === b.density) {
+            return a.time - b.time;
+          }
+
+          return b.density - a.density;
+        });
     },
 
     handleSave() {

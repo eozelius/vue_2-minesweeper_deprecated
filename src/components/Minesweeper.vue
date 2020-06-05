@@ -12,6 +12,7 @@
     <HighScores
       :show-high-scores-modal="showHighScoresModal"
       :dismiss-high-scores-modal="dismissHighScoresModal"
+      :mine-density="mineDensity"
     />
   </div>
 </template>
@@ -30,6 +31,7 @@ export default {
       gameActive: false,
       youLost: false,
       youWon: false,
+      mineDensity: 0,
 
       // HighScores
       showHighScoresModal: false
@@ -57,28 +59,13 @@ export default {
     loseGame() {
       this.gameActive = false;
       this.youLost = true;
-      console.log(
-        "[ minesweeper.vue ] loseGame() this.gameActive => ",
-        this.gameActive
-      );
-      console.log(
-        "[ minesweeper.vue ] loseGame() this.youLost => ",
-        this.youLost
-      );
     },
 
-    winGame() {
+    winGame(mineDensity) {
+      this.mineDensity = mineDensity;
       this.gameActive = false;
       this.youWon = true;
       this.revealHighScoresModal();
-      console.log(
-        "[ minesweeper.vue ] loseGame() this.gameActive => ",
-        this.gameActive
-      );
-      console.log(
-        "[ minesweeper.vue ] loseGame() this.youWon => ",
-        this.youWon
-      );
     },
 
     revealHighScoresModal() {
