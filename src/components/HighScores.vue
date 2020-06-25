@@ -6,8 +6,7 @@
         <tr>
           <th>Rank</th>
           <th>Name</th>
-          <th>Difficulty</th>
-          <th>Time</th>
+          <th>Score</th>
         </tr>
 
         <tr
@@ -17,8 +16,7 @@
         >
           <td>{{ index + 1 }}.</td>
           <td>{{ score.name }}</td>
-          <td>{{ score.density * 100 }}</td>
-          <td>{{ score.time }}</td>
+          <td>{{ score.score }}</td>
         </tr>
       </table>
     </div>
@@ -47,6 +45,7 @@
 
 <script>
 import { mapState } from "vuex";
+import Api from "@/Api";
 
 export default {
   name: "High-Scores",
@@ -66,9 +65,21 @@ export default {
       type: Function,
       default: () => {}
     },
-    mineDensity: {
+    score: {
       type: Number,
       default: 0
+    }
+  },
+
+  created: async function() {
+    try {
+      const highScores = await Api.getHighScores();
+
+      highScores.forEach(hs => {
+        this.addHighScore(hs.name, hs.time, hs.score);
+      });
+    } catch (error) {
+      console.error("HighScores.vue error => ", error);
     }
   },
 
@@ -78,22 +89,30 @@ export default {
 
   methods: {
     submitHighScore(name, time) {
-      if (!name || !time || !this.mineDensity) {
+      if (!name || !time || !this.score) {
+        console.error(
+          "submithighscore() error: missing required field: name, time, score. \n name => ",
+          name,
+          " time => ",
+          time,
+          "score => ",
+          this.score
+        );
         return;
       }
 
+      this.addHighScore(name, time, this.score);
+    },
+
+    addHighScore(name, time, score) {
       this.highScores = this.highScores
         .concat({
           name,
           time,
-          density: this.mineDensity
+          score
         })
         .sort((a, b) => {
-          if (a.density === b.density) {
-            return a.time - b.time;
-          }
-
-          return b.density - a.density;
+          return b.score - a.score;
         });
     },
 

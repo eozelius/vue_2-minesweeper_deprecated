@@ -244,8 +244,13 @@ export default {
 
     isGameWon() {
       if (this.allMinesFlagged() || this.allSafeCellsClicked()) {
+        const density = this.mineDensity * 100;
+        const area = this.rows * this.cols;
+        const difficulty = area * density * 400;
+        const score = Math.round(difficulty / this.elapsedTime);
+
         this.pauseTimer();
-        this.winGame(this.mineDensity);
+        this.winGame(score);
         this.flagActiveMines();
         return true;
       } else {

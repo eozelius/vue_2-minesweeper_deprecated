@@ -1,32 +1,21 @@
 <template>
   <div class="time-container">
-    <img
-      class="stopwatch"
-      src="../images/stopwatch.png"
-      alt="stopwatch icon"
-    />
+    <img class="stopwatch" src="../images/stopwatch.png" alt="stopwatch icon" />
     <p class="elapsed-time">{{ elapsedTime }}</p>
   </div>
 </template>
 
 <script>
-import Board from "@/components/Board.vue";
-import HighScores from "@/components/HighScores.vue";
-
 export default {
   name: "Timer",
 
-  props: {
-    
-  },
+  props: {},
 
   data: () => {
-    return {
-    };
+    return {};
   },
 
   methods: {
-
     startTimer() {
       console.log("TODO Minesweeper.vue::startTimer: ");
       // this.startTime = Date.now();
@@ -43,5 +32,3 @@ export default {
   }
 };
 </script>
-
-<style lang="scss" scoped></style>

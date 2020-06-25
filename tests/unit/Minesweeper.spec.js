@@ -1,5 +1,4 @@
 import { shallowMount } from "@vue/test-utils";
-import { winGame } from "../specHelpers";
 import Minesweeper from "@/components/Minesweeper.vue";
 
 let wrapper;

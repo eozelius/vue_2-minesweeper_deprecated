@@ -12,7 +12,7 @@
     <HighScores
       :show-high-scores-modal="showHighScoresModal"
       :dismiss-high-scores-modal="dismissHighScoresModal"
-      :mine-density="mineDensity"
+      :score="score"
     />
   </div>
 </template>
@@ -31,7 +31,7 @@ export default {
       gameActive: false,
       youLost: false,
       youWon: false,
-      mineDensity: 0,
+      score: 0,
 
       // HighScores
       showHighScoresModal: false
@@ -61,8 +61,8 @@ export default {
       this.youLost = true;
     },
 
-    winGame(mineDensity) {
-      this.mineDensity = mineDensity;
+    winGame(score) {
+      this.score = score;
       this.gameActive = false;
       this.youWon = true;
       this.revealHighScoresModal();
