@@ -10,6 +10,7 @@
     "test:unit": "vue-cli-service test:unit"
   },
   "dependencies": {
+    "axios": "^0.19.2",
     "vue": "^2.5.22",
     "vue-router": "^3.0.1",
     "vuex": "^3.0.1"
@@ -46,14 +47,13 @@
       "no-trailing-spaces": [
         "error"
       ],
-      "semi": [
-        "error",
-        "always"
-      ],
+      "semi": 0,
       "indent": [
         "error",
         2
-      ]
+      ],
+      "no-console": "off",
+      "quotes": "off"
     },
     "parserOptions": {
       "parser": "babel-eslint"
